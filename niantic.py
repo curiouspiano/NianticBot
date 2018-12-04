@@ -1,45 +1,61 @@
-import discord
+from discord.ext import commands
 import json
-import time
+from os import listdir
+from os.path import isfile, join
 from random import *
 import asyncio
+import discord
 
+cogs_dir = "cogs"
 config = json.loads(open("config.json").read())
 prefix = config["prefix"]
-token = config["token"]
-prefix = "?"
-admins = ['366348310698655752', '151846248784199680']
-client = discord.Client()
 
-async def slow_send(channel, text):
-    await client.send_typing(channel)
-    await asyncio.sleep(2)
-    await client.send_message(channel, text)
-    
-@client.event
+bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
+
+@bot.command()
+async def link():
+    link = "https://discordapp.com/oauth2/authorize?client_id={}&scope=bot"
+    await bot.say(link.format(bot.user.id))
+
+@bot.command()
+async def load(extension_name : str):
+    """Loads an extension."""
+    try:
+        bot.load_extension(extension_name)
+    except (AttributeError, ImportError) as e:
+        await bot.say("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
+        return
+    await bot.say("{} loaded.".format(extension_name))
+
+@bot.command()
+async def reload(extension_name : str):
+    try:
+        bot.unload_extension(extension_name)
+        bot.load_extension(extension_name)
+        await bot.say("reload succesful")
+    except Exception as e:
+        print(e)
+        await bot.say("reload failed")
+
+@bot.command()
+async def unload(extension_name : str):
+    """Unloads an extension."""
+    bot.unload_extension(extension_name)
+    await bot.say("{} unloaded.".format(extension_name))
+
+@bot.event
 async def on_ready():
     print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
+    print(bot.user.name)
+    print(bot.user.id)
     print('------')
-    newGame = discord.Game(name="We did nothing wrong...")
-    await client.change_presence(game=newGame)
 
-@client.event
-async def on_message(message):
-        split = message.content.split(' ')
-        if((message.author.id in admins) and message.content.startswith(prefix)):
-            print("accessing admin commands")
-            
-        if(client.user.mentioned_in(message)):
-            await client.send_typing(message.channel)
-            await asyncio.sleep(2)
-            if(randint(1,25) == 1):
-                await client.send_file(message.channel, 'shiny.png')
-            else:
-                await client.send_message(message.channel, "¯\_(ツ)_/¯")
-        #elif('bug' in split):
-            #await slow_send(message.channel, "I have no clue what you're talking about. Bugs are a type of pokemon...")
-            
 
-client.run(token)
+            
+if __name__ == "__main__":
+    for extension in [f.replace('.py', '') for f in listdir(cogs_dir) if isfile(join(cogs_dir, f))]:
+        try:
+            bot.load_extension(cogs_dir + "." + extension)
+        except Exception as e:
+            print('Failed to load extension {extension}.', extension)
+    bot.run(config["token"], bot=True)
