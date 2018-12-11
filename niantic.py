@@ -40,12 +40,6 @@ async def unload(extension_name : str):
     bot.unload_extension(extension_name)
     await bot.say("{} unloaded.".format(extension_name))
 
-@bot.command(hidden=True)
-async def shutdown():
-    """Shuts down the bot"""
-    bot.client.logout()
-    bot.client.close()
-    exit()
 
 @bot.event
 async def on_ready():
