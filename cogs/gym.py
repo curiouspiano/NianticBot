@@ -12,12 +12,14 @@ class Gym():
 
     @commands.command(pass_context=True)
     async def listleaders(self,ctx):
+        """Lists all gym leaders"""
         leaderids = self.gymleader.keys()
         names = [ctx.message.server.get_member(user).mention for user in leaderids]
         await self.bot.say(', '.join(names))
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True,usage='<@user> <description> <badgeName>')
     async def addleader(self,ctx,user : discord.Member,desc : str, badgeName : str):
+        """Adds a gym leader"""
         print(user.id)
         self.gymleader[user.id] = {}
         self.gymleader[user.id]['desc'] = desc

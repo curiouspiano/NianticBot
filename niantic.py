@@ -13,6 +13,7 @@ prefix = config["prefix"]
 
 bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
 
+
 @bot.command()
 async def load(extension_name : str):
     """Loads an extension."""
@@ -23,7 +24,7 @@ async def load(extension_name : str):
         return
     await bot.say("{} loaded.".format(extension_name))
 
-@bot.command()
+@bot.command(hidden=True)
 async def reload(extension_name : str):
     try:
         bot.unload_extension(extension_name)
@@ -33,7 +34,7 @@ async def reload(extension_name : str):
         print(e)
         await bot.say("reload failed")
 
-@bot.command()
+@bot.command(hidden=True)
 async def unload(extension_name : str):
     """Unloads an extension."""
     bot.unload_extension(extension_name)
@@ -47,7 +48,6 @@ async def on_ready():
     print('------')
 
 
-            
 if __name__ == "__main__":
     for extension in [f.replace('.py', '') for f in listdir(cogs_dir) if isfile(join(cogs_dir, f))]:
         try:
