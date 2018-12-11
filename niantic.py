@@ -12,12 +12,12 @@ prefix = config["prefix"]
 
 bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
 
-@bot.command()
+@bot.command(hidden=True)
 async def link():
     link = "https://discordapp.com/oauth2/authorize?client_id={}&scope=bot"
     await bot.say(link.format(bot.user.id))
 
-@bot.command()
+@bot.command(hidden = True)
 async def load(extension_name : str):
     """Loads an extension."""
     try:
@@ -27,7 +27,7 @@ async def load(extension_name : str):
         return
     await bot.say("{} loaded.".format(extension_name))
 
-@bot.command()
+@bot.command(hidden=True)
 async def reload(extension_name : str):
     try:
         bot.unload_extension(extension_name)
@@ -37,7 +37,7 @@ async def reload(extension_name : str):
         print(e)
         await bot.say("reload failed")
 
-@bot.command()
+@bot.command(hidden=True)
 async def unload(extension_name : str):
     """Unloads an extension."""
     bot.unload_extension(extension_name)
