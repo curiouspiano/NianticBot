@@ -7,20 +7,30 @@ from os.path import isfile
 class Gym():
     def __init__(self, bot):
         self.bot= bot
-#        self.gymleaders = []
         self.gymleader = json.loads(open("gymleaders.json").read()) if isfile("gymleaders.json") else {}
 
-    @commands.command(pass_context=True)
-    async def listleaders(self,ctx):
-        """Lists all gym leaders"""
-        leaderids = self.gymleader.keys()
-        names = [ctx.message.server.get_member(user).mention for user in leaderids]
-        await self.bot.say(', '.join(names))
+
+    @commands.group(pass_context=True)
+    async def list(self,ctx):
+        if ctx.invoked_subcommand is None:
+            url1 = "https://pokemongo.gamepress.gg/sites/pokemongo/files/2018-02/Badge_GymLeader_GOLD_01.png"
+            for userid in self.gymleader.keys():
+                user = ctx.message.server.get_member(userid)
+                em = discord.Embed(name="Gym Leader", description="Gym Leader")
+                em.set_thumbnail(url=url1)
+                em.add_field(name="Discord Username",value=user.mention,inline=True)
+                em.add_field(name="Badge Title",value=self.gymleader[userid]['badgeName'],inline=True)
+                em.add_field(name="Challenge Description",value=self.gymleader[userid]['desc'],inline=True)
+                await self.bot.send_message(ctx.message.channel,embed=em)
+
+    @list.command(pass_context=True)
+    async def leaders(self,ctx):
+        names = [ctx.message.server.get_member(user).mention for user in self.gymleader.keys()]
+        await self.bot.say(["Gym Leaders: ",', '.join(names)])
 
     @commands.command(pass_context=True,usage='<@user> <description> <badgeName>')
     async def addleader(self,ctx,user : discord.Member,desc : str, badgeName : str):
         """Adds a gym leader"""
-        print(user.id)
         self.gymleader[user.id] = {}
         self.gymleader[user.id]['desc'] = desc
         self.gymleader[user.id]['badgeName'] = badgeName
