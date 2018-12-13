@@ -3,6 +3,7 @@ import json
 from os import listdir
 from os.path import isfile, join
 from random import *
+from lib.simplemysql import *
 import asyncio
 import discord
 
