@@ -14,7 +14,7 @@ prefix = config["prefix"]
 bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
 
 
-@bot.command()
+@bot.command(hidden = True)
 async def load(extension_name : str):
     """Loads an extension."""
     try:
