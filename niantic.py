@@ -3,7 +3,7 @@ import json
 from os import listdir
 from os.path import isfile, join
 from random import *
-from lib.simplemysql import *
+from lib.mysql import mysqldb
 import asyncio
 import discord
 
@@ -13,8 +13,9 @@ prefix = config["prefix"]
 
 bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
 
+bot.SQL = mysqldb(bot.loop, config["dbHost"], config["dbUser"], config["dbPass"], config["dbName"])
 
-@bot.command(hidden = True)
+@bot.command()
 async def load(extension_name : str):
     """Loads an extension."""
     try:
@@ -47,6 +48,12 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+    try:
+        await bot.SQL.connect()
+        bot.SQL.disconnect()
+        print("Database connection succesfully established")
+    except Exception as e:
+        print("Issue establishing database conenction...\n{}".format(e))
 
 
 if __name__ == "__main__":
