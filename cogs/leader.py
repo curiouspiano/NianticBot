@@ -2,13 +2,19 @@ import discord
 from discord.ext import commands
 import json
 from os.path import isfile
-
+from lib.simplemysql import SimpleMysql as sql
 
 class Leader():
     def __init__(self, bot):
         self.bot= bot
         self.gymleader = json.loads(open("gymleaders.json").read()) if isfile("gymleaders.json") else {}
         self.elite = json.loads(open("elitefour.json").read()) if isfile("elitefour.json") else []
+        db = sql(
+                host='127.0.0.1',
+                db='bfr',
+                user='bot',
+                passwd='BotPass3234!',
+                keep_alive=True)
 
     @commands.group(pass_context=True)
     async def leader(self,ctx):
