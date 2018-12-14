@@ -14,11 +14,6 @@ prefix = config["prefix"]
 bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
 
 @bot.command()
-async def link():
-    link = "https://discordapp.com/oauth2/authorize?client_id={}&scope=bot"
-    await bot.say(link.format(bot.user.id))
-
-@bot.command()
 async def load(extension_name : str):
     """Loads an extension."""
     try:
@@ -57,6 +52,7 @@ if __name__ == "__main__":
     for extension in [f.replace('.py', '') for f in listdir(cogs_dir) if isfile(join(cogs_dir, f))]:
         try:
             bot.load_extension(cogs_dir + "." + extension)
+            print("Loaded Extension: {}".format(extension))
         except Exception as e:
-            print('Failed to load extension {extension}.', extension)
+            print('Failed to load extension {extension}. Issue: {}', extension, e)
     bot.run(config["token"], bot=True)
