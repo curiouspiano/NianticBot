@@ -43,13 +43,9 @@ class Leader():
             await self.bot.sent_message(ctx.message.channel,"I'm not sure I got that. Please try again")
 
     @leader.command(pass_context=True)
-    async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,nickname : str = None,trainerName : str = None,badgeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],badgeYear : int = datetime.datetime.today().year):
-        badgeMonthNum = list(calendar.month_name).index(badgeMonth)
+    async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
+        challengeMonthNum = list(calendar.month_name).index(challengeMonth)
         await self.bot.SQL.connect()
-        await self.bot.SQL.query("\
-                        REPLACE INTO users\
-                        SET id={},nick=\"{}\",trainerName=\"{}\";".format(\
-                        user.id,nickname,trainerName))
         challengerid = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT max(id) FROM challengers")),'max(id)'))[0] + 1
         if ltype.replace(" ","")[:3].lower() == "gym":
             cursor = await self.bot.SQL.query("SELECT max(id) FROM badges")
@@ -62,14 +58,15 @@ class Leader():
                         start_available=\"{}-{}-01\",\
                         end_available=\"{}-{}-{}\";".format(\
                         badgeid,desc,badgeName,\
-                        badgeYear,badgeMonthNum,\
-                        badgeYear,badgeMonthNum,calendar.monthrange(badgeYear,badgeMonthNum)[1]))
+                        challengeYear,challengeMonthNum,\
+                        challengeYear,challengeMonthNum,calendar.monthrange(challengeYear,challengeMonthNum)[1]))
             await self.bot.SQL.query("\
                     REPLACE INTO challengers\
                     SET id={},\
-                        description=\"Gym Leader\",\
+                        name=\"Gym Leader\",\
                         user_fk={},\
-                        badge_fk={}".format(challengerid,user.id,badgeid))
+                        badge_fk={},\
+                        description=\"{}, {}\";".format(challengerid,user.id,badgeid,challengeMonth,challengeYear))
 
             await self.bot.send_message(ctx.message.channel,"Gym Leader added:\n{}\n{}\n{}".format(user.mention,self.gymleader[user.id]['desc'],self.gymleader[user.id]['badgeName']))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
@@ -78,7 +75,8 @@ class Leader():
                     REPLACE INTO challengers\
                     SET id={},\
                         user_fk={},\
-                        description=\"Elite Four\";".format(challengerid,user.id))
+                        name=\"Elite Four\"\
+                        description=\"{}, {}\";".format(challengerid,user.id,challengeMonth,challengeYear))
 
 
             await self.bot.send_message(ctx.message.channel,"Elite Four Added:\n{}".format(user.mention))
