@@ -66,6 +66,7 @@ class Leader():
                         name=\"Gym Leader\",\
                         user_fk={},\
                         badge_fk={},\
+                        active=1,\
                         description=\"{}, {}\";".format(challengerid,user.id,badgeid,challengeMonth,challengeYear))
 
             await self.bot.send_message(ctx.message.channel,"Gym Leader added:\n{}\n{}\n{}".format(user.mention,self.gymleader[user.id]['desc'],self.gymleader[user.id]['badgeName']))
@@ -75,7 +76,8 @@ class Leader():
                     REPLACE INTO challengers\
                     SET id={},\
                         user_fk={},\
-                        name=\"Elite Four\"\
+                        name=\"Elite Four\",\
+                        active=1,\
                         description=\"{}, {}\";".format(challengerid,user.id,challengeMonth,challengeYear))
 
 
@@ -89,10 +91,17 @@ class Leader():
     @leader.command(pass_context=True)
     async def remove(self,ctx,ltype : str,user : discord.Member):
         if ltype.replace(" ","")[:3].lower() == "gym":
-            del self.gymleader[user.id]
+            #del self.gymleader[user.id]
+            await self.bot.SQL.connect()
+            await self.bot.SQL.query("UPDATE challengers SET active=0 WHERE user_fk={} and name=\"Gym Leader\";".format(user.id))
+            self.bot.SQL.disconnect()
+
             await self.bot.send_message(ctx.message.channel,"Gym Leader removed: {}".format(user.mention))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
-            del self.elite[user.id]
+            #del self.elite[user.id]
+            await self.bot.SQL.connect()
+            await self.bot.SQL.query("UPDATE challengers SET active=0 WHERE user_fk={} and name=\"Elite Four\";".format(user.id))
+            self.bot.SQL.disconnect()
             await self.bot.send_message(ctx.message.channel,"Elite Four Member removed: {}".format(user.mention))
         else:
             await self.bot.send_message(ctx.message.channel,"I'm not sure I got that. Please try again")
