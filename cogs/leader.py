@@ -17,9 +17,10 @@ class Leader():
             await self.bot.send_message(ctx.message.channel,"You need a subcommand for this to work! Please try again")
 
     @leader.command(pass_context=True)
-    async def list(self,ctx,*,ltype : str):
-        #leader list <ltype>
-        if ltype.replace(" ","")[:3].lower() == "gym":
+    async def list(self,ctx,*,ltype : str = None):
+        #leader list [ltype]
+        isError=False
+        if ltype.replace(" ","")[:3].lower() == "gym" if ltype is not None else True:
 
             url1 = "https://pokemongo.gamepress.gg/sites/pokemongo/files/2018-02/Badge_GymLeader_GOLD_01.png"
             await self.bot.SQL.connect()
@@ -40,7 +41,9 @@ class Leader():
                 em.add_field(name="Badge Title",value=badgeNameList[i],inline=True)
                 em.add_field(name="Challenge Description",value=str(badgeDescList[i]).replace("b","").replace("'",""),inline=True)
                 await self.bot.send_message(ctx.message.channel,embed=em)
-        elif ltype.replace(" ","")[:9].lower() == "elitefour":
+        else:
+            isError=True
+        if ltype.replace(" ","")[:9].lower() == "elitefour" if ltype is not None else True:
 
             url1 = "http://static.tumblr.com/8ead6fd4ef321fc779d824ec3d39f5cd/9vi46my/6uso1uc3y/tumblr_static_515l7v2awykgk0sgcwow4wgog.png"
             await self.bot.SQL.connect()
@@ -53,6 +56,8 @@ class Leader():
                 em.add_field(name="Discord Username",value=user.mention,inline=True)
                 await self.bot.send_message(ctx.message.channel,embed=em)
         else:
+            isError=True
+        if isError:
             await self.bot.send_message(ctx.message.channel,"I'm not sure I got that. Please try again")
 
     @leader.command(pass_context=True)
