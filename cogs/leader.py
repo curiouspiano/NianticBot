@@ -17,30 +17,43 @@ class Leader():
             await self.bot.send_message(ctx.message.channel,"You need a subcommand for this to work! Please try again")
 
     @leader.command(pass_context=True)
-    async def list(self,ctx,ltype : str):
+    async def list(self,ctx,*,ltype : str):
         #leader list <ltype>
         if ltype.replace(" ","")[:3].lower() == "gym":
 
             url1 = "https://pokemongo.gamepress.gg/sites/pokemongo/files/2018-02/Badge_GymLeader_GOLD_01.png"
-            for userid in self.gymleader.keys():
-                user = ctx.message.server.get_member(userid)
+            await self.bot.SQL.connect()
+            userList = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" ORDER BY id ASC;")),"user_fk"))
+            if len(userList) == 0:
+                self.bot.SQL.disconnect()
+                return
+            badgeCursor = (await self.bot.SQL.query("SELECT badges.name as name, badges.description as description FROM badges INNER JOIN challengers ON badges.id=challengers.badge_fk ORDER BY challengers.id ASC;"))
+            badgeNameList = (await self.bot.SQL.fetch_all_list(badgeCursor,"name"))
+            descCursor = (await self.bot.SQL.query("SELECT badges.description as description FROM badges INNER JOIN challengers ON badges.id=challengers.badge_fk ORDER BY challengers.id ASC;"))
+            badgeDescList = (await self.bot.SQL.fetch_all_list(descCursor,"description"))
+            self.bot.SQL.disconnect()
+            for i in range(len(userList)):
+                user = ctx.message.server.get_member(str(userList[i]))
                 em = discord.Embed(name="Gym Leader", description="Gym Leader")
                 em.set_thumbnail(url=url1)
                 em.add_field(name="Discord Username",value=user.mention,inline=True)
-                em.add_field(name="Badge Title",value=self.gymleader[userid]['badgeName'],inline=True)
-                em.add_field(name="Challenge Description",value=self.gymleader[userid]['desc'],inline=True)
+                em.add_field(name="Badge Title",value=badgeNameList[i],inline=True)
+                em.add_field(name="Challenge Description",value=str(badgeDescList[i]).replace("b","").replace("'",""),inline=True)
                 await self.bot.send_message(ctx.message.channel,embed=em)
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
 
             url1 = "http://static.tumblr.com/8ead6fd4ef321fc779d824ec3d39f5cd/9vi46my/6uso1uc3y/tumblr_static_515l7v2awykgk0sgcwow4wgog.png"
-            for userid in self.elite:
-                user = ctx.message.server.get_member(userid)
+            await self.bot.SQL.connect()
+            userList = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 AND name=\"Elite Four\" ORDER BY id ASC;")),"user_fk"))
+
+            for userid in userList:
+                user = ctx.message.server.get_member(str(userid))
                 em = discord.Embed(name="Elite Four",description="Elite Four")
                 em.set_thumbnail(url=url1)
                 em.add_field(name="Discord Username",value=user.mention,inline=True)
                 await self.bot.send_message(ctx.message.channel,embed=em)
         else:
-            await self.bot.sent_message(ctx.message.channel,"I'm not sure I got that. Please try again")
+            await self.bot.send_message(ctx.message.channel,"I'm not sure I got that. Please try again")
 
     @leader.command(pass_context=True)
     async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
