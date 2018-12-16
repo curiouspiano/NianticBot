@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from datetime import date
 
 class Player():
     def __init__(self, bot):
@@ -11,8 +12,8 @@ class Player():
         await self.bot.SQL.connect()
         await self.bot.SQL.query("\
                         REPLACE INTO users\
-                        SET id={},nick=\"{}\",trainerName=\"{}\";".format(\
-                        user.id,user.display_name,trainerName))
+                        SET id={},nick=\"{}\",trainerName=\"{}\",joinDate=\"{}\";".format(\
+                        user.id,user.display_name,trainerName,date.today()))
         self.bot.SQL.disconnect()
         await self.bot.send_message(ctx.message.channel,"Trainer {} has joined the fight!".format(trainerName if trainerName is not None else user.mention))
     #@commands.group(pass_context=True)
