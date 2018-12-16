@@ -26,9 +26,9 @@ class Leader():
             if len(userList) == 0:
                 self.bot.SQL.disconnect()
                 return
-            badgeCursor = (await self.bot.SQL.query("SELECT badges.name as name, badges.description as description FROM badges INNER JOIN challengers ON badges.id=challengers.badge_fk ORDER BY challengers.id ASC;"))
+            badgeCursor = (await self.bot.SQL.query("SELECT badges.name as name FROM challengers INNER JOIN badges ON badges.id=challengers.badge_fk WHERE challengers.active=1 ORDER BY challengers.id ASC;"))
             badgeNameList = (await self.bot.SQL.fetch_all_list(badgeCursor,"name"))
-            descCursor = (await self.bot.SQL.query("SELECT badges.description as description FROM badges INNER JOIN challengers ON badges.id=challengers.badge_fk ORDER BY challengers.id ASC;"))
+            descCursor = (await self.bot.SQL.query("SELECT badges.description as description FROM challengers INNER JOIN badges ON badges.id=challengers.badge_fk WHERE challengers.active=1 ORDER BY challengers.id ASC;"))
             badgeDescList = (await self.bot.SQL.fetch_all_list(descCursor,"description"))
             self.bot.SQL.disconnect()
             for i in range(len(userList)):
@@ -89,7 +89,9 @@ class Leader():
                         description=\"{}, {}\";".format(\
                         user.id,badgeid,challengeMonth,challengeYear))
 
-            await self.bot.send_message(ctx.message.channel,"Gym Leader added:\n{}\n{}\n{}".format(user.mention,self.gymleader[user.id]['desc'],self.gymleader[user.id]['badgeName']))
+            gymRole = discord.utils.get(ctx.message.server.roles,name="Gym Leader")
+            await self.bot.add_roles(user,gymRole)
+            await self.bot.send_message(ctx.message.channel,"Gym Leader added:\nLeader: {}\nDescription: {}\nBadge Name: {}".format(user.mention,desc,badgeName))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
             ##Adds an Elite Four Member
             await self.bot.SQL.query("\
@@ -100,6 +102,8 @@ class Leader():
                         description=\"{}, {}\";".format(\
                         user.id,challengeMonth,challengeYear))
 
+            eliteRole = discord.utils.get(ctx.message.server.roles,name="Elite Four")
+            await self.bot.add_roles(user,eliteRole)
             await self.bot.send_message(ctx.message.channel,"Elite Four Added:\n{}".format(user.mention))
         else:
             await self.bot.sent_message(ctx.message.channel,"I'm not sure I got that. Please try again")
@@ -114,11 +118,18 @@ class Leader():
             await self.bot.SQL.query("UPDATE challengers SET active=0 WHERE user_fk={} and name=\"Gym Leader\";".format(user.id))
             self.bot.SQL.disconnect()
 
+            gymRole = discord.utils.get(ctx.message.server.roles,name="Gym Leader")
+            await self.bot.remove_roles(user,gymRole)
+
             await self.bot.send_message(ctx.message.channel,"Gym Leader removed: {}".format(user.mention))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
             await self.bot.SQL.connect()
             await self.bot.SQL.query("UPDATE challengers SET active=0 WHERE user_fk={} and name=\"Elite Four\";".format(user.id))
             self.bot.SQL.disconnect()
+
+            eliteRole = discord.utils.get(ctx.message.server.roles,name="Elite Four")
+            await self.bot.remove_roles(user,eliteRole)
+
             await self.bot.send_message(ctx.message.channel,"Elite Four Member removed: {}".format(user.mention))
         else:
             await self.bot.send_message(ctx.message.channel,"I'm not sure I got that. Please try again")
