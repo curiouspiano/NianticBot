@@ -1,23 +1,21 @@
 import discord
 from discord.ext import commands
-import json
-from os.path import isfile
 import calendar
 import datetime
 
 class Leader():
     def __init__(self, bot):
         self.bot= bot
-        self.gymleader = json.loads(open("gymleaders.json").read()) if isfile("gymleaders.json") else {}
-        self.elite = json.loads(open("elitefour.json").read()) if isfile("elitefour.json") else []
 
     @commands.group(pass_context=True)
     async def leader(self,ctx):
+        """Manage and List Frontier League Leaders"""
         if ctx.invoked_subcommand is None:
             await self.bot.send_message(ctx.message.channel,"You need a subcommand for this to work! Please try again")
 
     @leader.command(pass_context=True)
     async def list(self,ctx,*,ltype : str = None):
+        """List all leaders of given type. If no type given, lists all leaders"""
         #leader list [ltype]
         isError=False
         if ltype.replace(" ","")[:3].lower() == "gym" if ltype is not None else True:
@@ -62,45 +60,47 @@ class Leader():
 
     @leader.command(pass_context=True)
     async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
+        """Adds a leader to the Frontier League. This command is for admins only"""
         challengeMonthNum = list(calendar.month_name).index(challengeMonth)
         await self.bot.SQL.connect()
-        challengerid = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT max(id) FROM challengers")),'max(id)'))[0] + 1
         if ltype.replace(" ","")[:3].lower() == "gym":
             cursor = await self.bot.SQL.query("SELECT max(id) FROM badges")
-            badgeid = (await self.bot.SQL.fetch_all_list(cursor,'max(id)'))[0] + 1
+
             await self.bot.SQL.query("\
                     REPLACE INTO badges\
-                    SET id={},\
-                        description=\"{}\",\
+                    SET description=\"{}\",\
                         name=\"{}\",\
                         start_available=\"{}-{}-01\",\
                         end_available=\"{}-{}-{}\";".format(\
-                        badgeid,desc,badgeName,\
+                        desc,badgeName,\
                         challengeYear,challengeMonthNum,\
                         challengeYear,challengeMonthNum,calendar.monthrange(challengeYear,challengeMonthNum)[1]))
+            badgeid = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("\
+            SELECT id FROM badges\
+            WHERE\
+                name=\"{}\" and start_available=\"{}-{}-01\";".format(\
+                badgeName,challengeYear,challengeMonthNum))),"id"))[0]
             await self.bot.SQL.query("\
                     REPLACE INTO challengers\
-                    SET id={},\
-                        name=\"Gym Leader\",\
+                    SET name=\"Gym Leader\",\
                         user_fk={},\
                         badge_fk={},\
                         active=1,\
-                        description=\"{}, {}\";".format(challengerid,user.id,badgeid,challengeMonth,challengeYear))
+                        description=\"{}, {}\";".format(\
+                        user.id,badgeid,challengeMonth,challengeYear))
 
             await self.bot.send_message(ctx.message.channel,"Gym Leader added:\n{}\n{}\n{}".format(user.mention,self.gymleader[user.id]['desc'],self.gymleader[user.id]['badgeName']))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
             ##Adds an Elite Four Member
             await self.bot.SQL.query("\
                     REPLACE INTO challengers\
-                    SET id={},\
-                        user_fk={},\
+                    SET user_fk={},\
                         name=\"Elite Four\",\
                         active=1,\
-                        description=\"{}, {}\";".format(challengerid,user.id,challengeMonth,challengeYear))
-
+                        description=\"{}, {}\";".format(\
+                        user.id,challengeMonth,challengeYear))
 
             await self.bot.send_message(ctx.message.channel,"Elite Four Added:\n{}".format(user.mention))
-            #open("elitefour.json",'w').write(json.dumps(self.elite))
         else:
             await self.bot.sent_message(ctx.message.channel,"I'm not sure I got that. Please try again")
 
@@ -108,15 +108,14 @@ class Leader():
 
     @leader.command(pass_context=True)
     async def remove(self,ctx,ltype : str,user : discord.Member):
+        """Sets a leader as inactive in the Frontier League"""
         if ltype.replace(" ","")[:3].lower() == "gym":
-            #del self.gymleader[user.id]
             await self.bot.SQL.connect()
             await self.bot.SQL.query("UPDATE challengers SET active=0 WHERE user_fk={} and name=\"Gym Leader\";".format(user.id))
             self.bot.SQL.disconnect()
 
             await self.bot.send_message(ctx.message.channel,"Gym Leader removed: {}".format(user.mention))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
-            #del self.elite[user.id]
             await self.bot.SQL.connect()
             await self.bot.SQL.query("UPDATE challengers SET active=0 WHERE user_fk={} and name=\"Elite Four\";".format(user.id))
             self.bot.SQL.disconnect()
