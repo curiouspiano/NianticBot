@@ -34,5 +34,25 @@ class Account:
             await self.bot.say("There was an issue... please ensure you're not adding spaces to your responses and try again")
             print(e)
 
+
+    @commands.command(pass_context=True)
+    async def profile(self, ctx, user):
+        await self.bot.send_typing(ctx.message.channel)
+        mentions = ctx.message.mentions
+        user = mentions[0]
+        badgeCount = None
+        badges = []
+        sql = "SELECT * FROM user_to_badge WHERE user_fk={}".format(int(user.id))
+        res = await self.bot.SQL.query(sql)
+        badgeCount = res.rowcount
+        res = await res.fetchall()
+        print(res)
+        sql = "SELECT * FROM users WHERE id={}".format(int(user.id))
+        await self.bot.SQL.connect()
+        res = await self.bot.SQL.query(sql)
+        res = await res.fetchone()
+        msg = discord.Embed(title=user.display_name, description="Trainer Name: {}\nFriend Code: {}\nBadge Count: {}\n".format(res['trainerName'], res['friendCode'], badgeCount))
+        await self.bot.send_message(ctx.message.channel, embed=msg)
+
 def setup(bot):
     bot.add_cog(Account(bot))
