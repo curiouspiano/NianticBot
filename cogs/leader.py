@@ -26,18 +26,24 @@ class Leader():
             if len(userList) == 0:
                 self.bot.SQL.disconnect()
                 return
-            badgeCursor = (await self.bot.SQL.query("SELECT badges.name as name FROM challengers INNER JOIN badges ON badges.id=challengers.badge_fk WHERE challengers.active=1 ORDER BY challengers.id ASC;"))
-            badgeNameList = (await self.bot.SQL.fetch_all_list(badgeCursor,"name"))
-            descCursor = (await self.bot.SQL.query("SELECT badges.description as description FROM challengers INNER JOIN badges ON badges.id=challengers.badge_fk WHERE challengers.active=1 ORDER BY challengers.id ASC;"))
-            badgeDescList = (await self.bot.SQL.fetch_all_list(descCursor,"description"))
+            badgeCursor = (await self.bot.SQL.query("\
+                    SELECT challengers.user_fk, badges.name, badges.description, users.friendCode\
+                    FROM challengers\
+                    INNER JOIN badges ON badges.id=challengers.badge_fk\
+                    INNER JOIN users ON challengers.user_fk=users.id\
+                    WHERE challengers.active=1 and challengers.name='Gym Leader'\
+                    ORDER BY challengers.id ASC;"))
+            result = await badgeCursor.fetchall()
+
             self.bot.SQL.disconnect()
-            for i in range(len(userList)):
-                user = ctx.message.server.get_member(str(userList[i]))
+            for row in result:
+                user = ctx.message.server.get_member(str(row['user_fk']))
                 em = discord.Embed(name="Gym Leader", description="Gym Leader")
                 em.set_thumbnail(url=url1)
                 em.add_field(name="Discord Username",value=user.mention,inline=True)
-                em.add_field(name="Badge Title",value=badgeNameList[i],inline=True)
-                em.add_field(name="Challenge Description",value=str(badgeDescList[i]).replace("b","").replace("'",""),inline=True)
+                em.add_field(name="Friend Code",value=row['friendCode'],inline=True)
+                em.add_field(name="Badge Title",value=row['name'],inline=True)
+                em.add_field(name="Challenge Description",value=str(row['description']).replace("b","").replace("'",""),inline=True)
                 await self.bot.send_message(ctx.message.channel,embed=em)
         else:
             isError=True
@@ -45,13 +51,14 @@ class Leader():
 
             url1 = "http://static.tumblr.com/8ead6fd4ef321fc779d824ec3d39f5cd/9vi46my/6uso1uc3y/tumblr_static_515l7v2awykgk0sgcwow4wgog.png"
             await self.bot.SQL.connect()
-            userList = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 AND name=\"Elite Four\" ORDER BY id ASC;")),"user_fk"))
-
-            for userid in userList:
-                user = ctx.message.server.get_member(str(userid))
+            userList =await (await self.bot.SQL.query("SELECT user_fk, users.friendCode FROM challengers INNER JOIN users ON users.id=challengers.user_fk WHERE active=1 AND name=\"Elite Four\" ORDER BY challengers.id ASC;")).fetchall()
+            await self.bot.SQL.disconnect()
+            for userDict in userList:
+                user = ctx.message.server.get_member(str(userDict["user_fk"]))
                 em = discord.Embed(name="Elite Four",description="Elite Four")
                 em.set_thumbnail(url=url1)
                 em.add_field(name="Discord Username",value=user.mention,inline=True)
+                em.add_field(name="Friend Code",value=userDict["friendCode"],inline=True)
                 await self.bot.send_message(ctx.message.channel,embed=em)
         else:
             isError=True
