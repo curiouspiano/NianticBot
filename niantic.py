@@ -10,12 +10,18 @@ import discord
 cogs_dir = "cogs"
 config = json.loads(open("config.json").read())
 prefix = config["prefix"]
+admins = config["admins"]
 
 bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
 
 bot.SQL = mysqldb(bot.loop, config["dbHost"], config["dbUser"], config["dbPass"], config["dbName"])
 
+def is_admin(ctx):
+    return (ctx.message.author.id in admins)
+
+
 @bot.command()
+@commands.check(is_admin)
 async def load(extension_name : str):
     """Loads an extension."""
     try:
@@ -25,7 +31,9 @@ async def load(extension_name : str):
         return
     await bot.say("{} loaded.".format(extension_name))
 
-@bot.command(hidden=True)
+
+@bot.command()
+@commands.check(is_admin)
 async def reload(extension_name : str):
     try:
         bot.unload_extension(extension_name)
@@ -35,7 +43,9 @@ async def reload(extension_name : str):
         print(e)
         await bot.say("reload failed")
 
-@bot.command(hidden=True)
+
+@bot.command()
+@commands.check(is_admin)
 async def unload(extension_name : str):
     """Unloads an extension."""
     bot.unload_extension(extension_name)
