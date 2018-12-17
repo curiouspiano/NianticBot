@@ -31,6 +31,7 @@ async def load(extension_name : str):
         return
     await bot.say("{} loaded.".format(extension_name))
 
+
 @bot.command()
 @commands.check(is_admin)
 async def reload(extension_name : str):
@@ -42,12 +43,14 @@ async def reload(extension_name : str):
         print(e)
         await bot.say("reload failed")
 
+
 @bot.command()
 @commands.check(is_admin)
 async def unload(extension_name : str):
     """Unloads an extension."""
     bot.unload_extension(extension_name)
     await bot.say("{} unloaded.".format(extension_name))
+
 
 @bot.event
 async def on_ready():
@@ -63,7 +66,6 @@ async def on_ready():
         print("Issue establishing database conenction...\n{}".format(e))
 
 
-            
 if __name__ == "__main__":
     for extension in [f.replace('.py', '') for f in listdir(cogs_dir) if isfile(join(cogs_dir, f))]:
         try:
