@@ -44,17 +44,18 @@ class Account:
         user = mentions[0]
         badgeCount = None
         badges = []
+        await self.bot.SQL.connect()
         sql = "SELECT * FROM user_to_badge WHERE user_fk={}".format(int(user.id))
         res = await self.bot.SQL.query(sql)
         badgeCount = res.rowcount
         res = await res.fetchall()
         print(res)
         sql = "SELECT * FROM users WHERE id={}".format(int(user.id))
-        await self.bot.SQL.connect()
         res = await self.bot.SQL.query(sql)
         res = await res.fetchone()
         msg = discord.Embed(title=user.display_name, description="Trainer Name: {}\nFriend Code: {}\nBadge Count: {}\n".format(res['trainerName'], res['friendCode'], badgeCount))
         await self.bot.send_message(ctx.message.channel, embed=msg)
+        self.bot.SQL.disconnect()
 
 def setup(bot):
     bot.add_cog(Account(bot))
