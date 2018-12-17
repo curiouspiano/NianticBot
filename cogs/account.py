@@ -38,10 +38,14 @@ class Account:
 
 
     @commands.command(pass_context=True)
-    async def profile(self, ctx, user):
+    async def profile(self, ctx):
         await self.bot.send_typing(ctx.message.channel)
         mentions = ctx.message.mentions
-        user = mentions[0]
+        user = None
+        if(len(mentions) == 0):
+            user = ctx.message.author
+        else:
+            user = mentions[0]
         badgeCount = None
         badges = []
         await self.bot.SQL.connect()
@@ -52,9 +56,12 @@ class Account:
         print(res)
         sql = "SELECT * FROM users WHERE id={}".format(int(user.id))
         res = await self.bot.SQL.query(sql)
-        res = await res.fetchone()
-        msg = discord.Embed(title=user.display_name, description="Trainer Name: {}\nFriend Code: {}\nBadge Count: {}\n".format(res['trainerName'], res['friendCode'], badgeCount))
-        await self.bot.send_message(ctx.message.channel, embed=msg)
+        if(res.rowcount == 0):
+            await self.bot.say("That user doesn't seem to be registered in the league... Let them know to register!")
+        else:
+            res = await res.fetchone()
+            msg = discord.Embed(title=user.display_name, description="Trainer Name: {}\nFriend Code: {}\nBadge Count: {}\n".format(res['trainerName'], res['friendCode'], badgeCount))
+            await self.bot.send_message(ctx.message.channel, embed=msg)
         self.bot.SQL.disconnect()
 
 def setup(bot):
