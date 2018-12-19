@@ -20,13 +20,21 @@ class Account:
                 await self.bot.say("You're alread registered... xxx")
                 self.bot.SQL.disconnect()
                 return
-            await self.bot.say("Alright, let's get you ready to fight!")
-            await self.bot.say("First, I need your PokemonGO trainer name:")
+            msg1 = await self.bot.say("Alright, let's get you ready to fight!")
+            msg2 = await self.bot.say("First, I need your PokemonGO trainer name:")
             resp = await self.bot.wait_for_message(author=user, timeout=180)
             trainerName = resp.content
-            await self.bot.say("Alright, now I need your friend code, please input it in one string <000000000000>")
+            await self.bot.delete_message(msg1)
+            await self.bot.delete_message(msg2)
+            msg1 = await self.bot.say("Alright, now I need your friend code, please input it in one string <000000000000>")
             resp = await self.bot.wait_for_message(author=user, timeout=180)
             trainerCode = resp.content
+            trainerCode = trainerCode.strip("<")
+            trainerCode = trainerCode.strip(">")
+            trainerCode = trainerCode.strip(" ")
+            trainerCode
+            await self.bot.delete_message(msg1)
+            await self.bot.delete_message(resp)
             nick = user.name
             sqlStr = "INSERT INTO users(id, nick, trainerName, friendCode, joinDate) VALUES ({}, '{}', '{}', '{}', '{}')".format(int(user.id), nick, trainerName, trainerCode, date.today())
             await self.bot.SQL.query(sqlStr)
@@ -53,14 +61,16 @@ class Account:
         res = await self.bot.SQL.query(sql)
         badgeCount = res.rowcount
         res = await res.fetchall()
-        print(res)
         sql = "SELECT * FROM users WHERE id={}".format(int(user.id))
         res = await self.bot.SQL.query(sql)
         if(res.rowcount == 0):
             await self.bot.say("That user doesn't seem to be registered in the league... Let them know to register!")
         else:
             res = await res.fetchone()
-            msg = discord.Embed(title=user.display_name, description="Trainer Name: {}\nFriend Code: {}\nBadge Count: {}\n".format(res['trainerName'], res['friendCode'], badgeCount))
+            desc = "Trainer Name: {}\n".format(res['trainerName'])
+            desc += "Friend Code: {}\n".format(res['friendCode'])
+            desc += "Join Date: {}\n".format(res['joinDate'])
+            msg = discord.Embed(title=user.display_name, description=desc)
             await self.bot.send_message(ctx.message.channel, embed=msg)
         self.bot.SQL.disconnect()
 
