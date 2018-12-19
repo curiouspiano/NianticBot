@@ -8,18 +8,27 @@ class Badges:
 
     async def badge_embed(self, user_id,badge_id):
         #returns an discord embed with badge info
-        res = await self.bot.SQL.query("SELECT earned FROM user_to_badge WHERE user_fk={} AND badge_fk={}".format(int(user_id), str(badge_id)))
+        defaultImage = "https://i.imgur.com/g9VaBDJ.jpg"
+        user = await self.bot.get_user_info(user_id)
+        res = await self.bot.SQL.query("SELECT earned, granter FROM user_to_badge WHERE user_fk={} AND badge_fk={}".format(int(user_id), str(badge_id)))
         dateInfo = await res.fetchone()
         print(dateInfo)
         res = await self.bot.SQL.query("SELECT * FROM badges WHERE id={}".format(int(badge_id)))
         badgeInfo = await res.fetchone()
         print(badgeInfo)
         desc = str(badgeInfo['description'])
-        print(type(badgeInfo['description']))
-        #desc = desc[1:]
+        image = defaultImage
+        if(badgeInfo['thumbnail_path'] != None):
+            image = badgeInfo['thumbnail_path']
+        granterName = "Unavailable"
+        if dateInfo['granter'] != None:
+            granterName = await self.bot.get_user_info(dateInfo['granter']).name
         title = badgeInfo['name']
-        desc = "***{}***\nEarned: {}".format(desc, dateInfo['earned'])
-        embed = discord.Embed(title=title, description=desc)
+        desc = "***{}***\n".format(desc)
+        embed = discord.Embed(title=title)
+        embed.add_field(name="__Description__", value=desc, inline=False)
+        embed.add_field(name="__Earned__", inline=False,value="Awarded to {} at {}. Awarded by {}".format(user.mention, dateInfo['earned'], granterName))
+        embed.set_thumbnail(url=image)
         return embed
 
     async def grant_badge(self, user_id, badge_id):
@@ -75,6 +84,11 @@ class Badges:
         else:
             await self.bot.say("It would appear they already have that badge...")
         self.bot.SQL.disconnect()
+
+    @badge.command(pass_context=True)
+    async def lookup(self, ctx, badge_name):
+        """Used to lookup a badge
+            usage: badge lookup 'badge name'"""
 
     @badge.command(pass_context=True)
     async def test(self, ctx):
