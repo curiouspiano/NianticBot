@@ -8,26 +8,32 @@ class Badges:
 
     async def badge_embed(self, user_id,badge_id):
         #returns an discord embed with badge info
+
+        #obtain badge data and make the embed, this is for display without user data
         defaultImage = "https://i.imgur.com/g9VaBDJ.jpg"
         user = await self.bot.get_user_info(user_id)
-        res = await self.bot.SQL.query("SELECT earned, granter FROM user_to_badge WHERE user_fk={} AND badge_fk={}".format(int(user_id), str(badge_id)))
-        dateInfo = await res.fetchone()
-        print(dateInfo)
         res = await self.bot.SQL.query("SELECT * FROM badges WHERE id={}".format(int(badge_id)))
         badgeInfo = await res.fetchone()
-        print(badgeInfo)
         desc = str(badgeInfo['description'])
         image = defaultImage
         if(badgeInfo['thumbnail_path'] != None):
             image = badgeInfo['thumbnail_path']
-        granterName = "Unavailable"
-        if dateInfo['granter'] != None:
-            granterName = await self.bot.get_user_info(dateInfo['granter']).name
         title = badgeInfo['name']
-        desc = "***{}***\n".format(desc)
+        desc = "***{}***\n".format(desc)        
         embed = discord.Embed(title=title)
         embed.add_field(name="__Description__", value=desc, inline=False)
-        embed.add_field(name="__Earned__", inline=False,value="Awarded to {} at {}. Awarded by {}".format(user.mention, dateInfo['earned'], granterName))
+        
+        #now we're gonna attach user info, if they've earned the badge
+        res = await self.bot.SQL.query("SELECT earned, granter FROM user_to_badge WHERE user_fk={} AND badge_fk={}".format(int(user_id), str(badge_id)))
+        if (res.rowcount > 0):
+            dateInfo = await res.fetchone()
+            granterName = "Unavailable"
+            if dateInfo['granter'] != None:
+                granterName = await self.bot.get_user_info(dateInfo['granter']).name
+            embed.add_field(name="__Earned__", inline=False,value="Awarded to {} at {}. Awarded by {}".format(user.mention, dateInfo['earned'], granterName))
+
+        else:
+            embed.set_footer(text="You have not earned this badge")
         embed.set_thumbnail(url=image)
         return embed
 
@@ -89,6 +95,18 @@ class Badges:
     async def lookup(self, ctx, badge_name):
         """Used to lookup a badge
             usage: badge lookup 'badge name'"""
+        sqlString = "SELECT * FROM badges WHERE name='{}'".format(badge_name)
+        await self.bot.SQL.connect()
+        resp = await self.bot.SQL.query(sqlString)
+        if (resp.rowcount == 0):
+            await self.bot.say("Hmm... can't seem to find that badge, make sure you surround the name with quotes")
+            return
+        badgeData = await resp.fetchone()
+        badgeID = badgeData['id']
+
+        em = await self.badge_embed(int(ctx.message.author.id), badgeID)
+        self.bot.SQL.disconnect()
+        await self.bot.send_message(ctx.message.channel, embed=em)
 
     @badge.command(pass_context=True)
     async def test(self, ctx):
