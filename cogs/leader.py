@@ -23,28 +23,28 @@ class Leader():
             url1 = "https://pokemongo.gamepress.gg/sites/pokemongo/files/2018-02/Badge_GymLeader_GOLD_01.png"
             await self.bot.SQL.connect()
             userList = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" ORDER BY id ASC;")),"user_fk"))
-            if len(userList) == 0:
-                self.bot.SQL.disconnect()
-                return
-            badgeCursor = (await self.bot.SQL.query("\
-                    SELECT challengers.user_fk, badges.name, badges.description, users.friendCode\
-                    FROM challengers\
-                    INNER JOIN badges ON badges.id=challengers.badge_fk\
-                    INNER JOIN users ON challengers.user_fk=users.id\
-                    WHERE challengers.active=1 and challengers.name='Gym Leader'\
-                    ORDER BY challengers.id ASC;"))
-            result = await badgeCursor.fetchall()
+            if len(userList) != 0:
+                badgeCursor = (await self.bot.SQL.query("\
+                        SELECT challengers.user_fk, badges.name, badges.description, users.friendCode\
+                        FROM challengers\
+                        INNER JOIN badges ON badges.id=challengers.badge_fk\
+                        INNER JOIN users ON challengers.user_fk=users.id\
+                        WHERE challengers.active=1 and challengers.name='Gym Leader'\
+                        ORDER BY challengers.id ASC;"))
+                result = await badgeCursor.fetchall()
 
-            self.bot.SQL.disconnect()
-            for row in result:
-                user = ctx.message.server.get_member(str(row['user_fk']))
-                em = discord.Embed(name="Gym Leader", description="Gym Leader")
-                em.set_thumbnail(url=url1)
-                em.add_field(name="Discord Username",value=user.mention,inline=True)
-                em.add_field(name="Friend Code",value=row['friendCode'],inline=True)
-                em.add_field(name="Badge Title",value=row['name'],inline=True)
-                em.add_field(name="Challenge Description",value=str(row['description']).replace("b","").replace("'",""),inline=True)
-                await self.bot.send_message(ctx.message.channel,embed=em)
+                self.bot.SQL.disconnect()
+                for row in result:
+                    user = ctx.message.server.get_member(str(row['user_fk']))
+                    em = discord.Embed(name="Gym Leader", description="Gym Leader")
+                    em.set_thumbnail(url=url1)
+                    em.add_field(name="Discord Username",value=user.mention,inline=True)
+                    em.add_field(name="Friend Code",value=row['friendCode'],inline=True)
+                    em.add_field(name="Badge Title",value=row['name'],inline=True)
+                    em.add_field(name="Challenge Description",value=str(row['description']).replace("b","").replace("'",""),inline=True)
+                    await self.bot.send_message(ctx.message.channel,embed=em)
+            else:
+                self.bot.SQL.disconnect()
         else:
             isError=True
         if ltype.replace(" ","")[:9].lower() == "elitefour" if ltype is not None else True:
@@ -52,7 +52,7 @@ class Leader():
             url1 = "http://static.tumblr.com/8ead6fd4ef321fc779d824ec3d39f5cd/9vi46my/6uso1uc3y/tumblr_static_515l7v2awykgk0sgcwow4wgog.png"
             await self.bot.SQL.connect()
             userList =await (await self.bot.SQL.query("SELECT user_fk, users.friendCode FROM challengers INNER JOIN users ON users.id=challengers.user_fk WHERE active=1 AND name=\"Elite Four\" ORDER BY challengers.id ASC;")).fetchall()
-            await self.bot.SQL.disconnect()
+            self.bot.SQL.disconnect()
             for userDict in userList:
                 user = ctx.message.server.get_member(str(userDict["user_fk"]))
                 em = discord.Embed(name="Elite Four",description="Elite Four")
@@ -66,6 +66,7 @@ class Leader():
             await self.bot.send_message(ctx.message.channel,"I'm not sure I got that. Please try again")
 
     @leader.command(pass_context=True)
+    @commands.has_any_role('Admin','Mod','admin')
     async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
         """Adds a leader to the Frontier League. This command is for admins only"""
         challengeMonthNum = list(calendar.month_name).index(challengeMonth)
@@ -117,7 +118,13 @@ class Leader():
 
         self.bot.SQL.disconnect()
 
+    @add.error
+    async def add_error(ctx, error,other):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.bot.say("You do not have the permission to add leaders. Please contact an Admin")
+
     @leader.command(pass_context=True)
+    @commands.has_any_role('Admin','Mod','admin','Gym Leader')
     async def remove(self,ctx,ltype : str,user : discord.Member):
         """Sets a leader as inactive in the Frontier League"""
         if ltype.replace(" ","")[:3].lower() == "gym":
@@ -141,5 +148,9 @@ class Leader():
         else:
             await self.bot.send_message(ctx.message.channel,"I'm not sure I got that. Please try again")
 
+    @remove.error
+    async def remove_error(ctx, error,other):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.bot.say("You do not have the permission to remove leaders. Please contact an Admin")
 def setup(bot):
     bot.add_cog(Leader(bot))
