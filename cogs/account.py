@@ -32,7 +32,6 @@ class Account:
             trainerCode = trainerCode.strip("<")
             trainerCode = trainerCode.strip(">")
             trainerCode = trainerCode.strip(" ")
-            trainerCode
             await self.bot.delete_message(msg1)
             await self.bot.delete_message(resp)
             nick = user.name
@@ -40,6 +39,14 @@ class Account:
             await self.bot.SQL.query(sqlStr)
             await self.bot.say("Welcome {} to the League!\n".format(nick))
             self.bot.SQL.disconnect()
+            #
+            try:
+                bfRole = None
+                bfRole = discord.utils.get(ctx.message.server.roles, name="Frontier League Participant")
+                await self.bot.add_roles(ctx.message.author, bfRole)
+            except:
+                await self.bot.say("....however, I can not assign you the role, sorry.")
+
         except Exception as e:
             await self.bot.say("There was an issue... please ensure you're not adding spaces to your responses and try again")
             print(e)
@@ -73,6 +80,7 @@ class Account:
             msg = discord.Embed(title=user.display_name, description=desc)
             await self.bot.send_message(ctx.message.channel, embed=msg)
         self.bot.SQL.disconnect()
+
 
 def setup(bot):
     bot.add_cog(Account(bot))
