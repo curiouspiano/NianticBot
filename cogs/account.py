@@ -1,4 +1,5 @@
 import discord
+import logging
 from discord.ext import commands
 from datetime import date
 
@@ -44,43 +45,50 @@ class Account:
                 bfRole = None
                 bfRole = discord.utils.get(ctx.message.server.roles, name="Frontier League Participant")
                 await self.bot.add_roles(ctx.message.author, bfRole)
-            except:
+            except Exception as e:
+                logging.warning(e)
                 await self.bot.say("....however, I can not assign you the role, sorry.")
 
         except Exception as e:
+            logging.warning(e)
             await self.bot.say("There was an issue... please ensure you're not adding spaces to your responses and try again")
-            print(e)
 
 
-    @commands.command(pass_context=True)
+    @commands.group(pass_context=True)
     async def profile(self, ctx):
-        await self.bot.send_typing(ctx.message.channel)
-        mentions = ctx.message.mentions
-        user = None
-        if(len(mentions) == 0):
-            user = ctx.message.author
-        else:
-            user = mentions[0]
-        badgeCount = None
-        badges = []
-        await self.bot.SQL.connect()
-        sql = "SELECT * FROM user_to_badge WHERE user_fk={}".format(int(user.id))
-        res = await self.bot.SQL.query(sql)
-        badgeCount = res.rowcount
-        res = await res.fetchall()
-        sql = "SELECT * FROM users WHERE id={}".format(int(user.id))
-        res = await self.bot.SQL.query(sql)
-        if(res.rowcount == 0):
-            await self.bot.say("That user doesn't seem to be registered in the league... Let them know to register!")
-        else:
-            res = await res.fetchone()
-            desc = "Trainer Name: {}\n".format(res['trainerName'])
-            desc += "Friend Code: {}\n".format(res['friendCode'])
-            desc += "Join Date: {}\n".format(res['joinDate'])
-            msg = discord.Embed(title=user.display_name, description=desc)
-            await self.bot.send_message(ctx.message.channel, embed=msg)
-        self.bot.SQL.disconnect()
+        """Used to access the players profile, or view anothers' by using @user"""
+        if ctx.invoked_subcommand is None:
+            await self.bot.send_typing(ctx.message.channel)
+            mentions = ctx.message.mentions
+            user = None
+            if(len(mentions) == 0):
+                user = ctx.message.author
+            else:
+                user = mentions[0]
+            badgeCount = None
+            badges = []
+            await self.bot.SQL.connect()
+            sql = "SELECT * FROM user_to_badge WHERE user_fk={}".format(int(user.id))
+            res = await self.bot.SQL.query(sql)
+            badgeCount = res.rowcount
+            res = await res.fetchall()
+            sql = "SELECT * FROM users WHERE id={}".format(int(user.id))
+            res = await self.bot.SQL.query(sql)
+            if(res.rowcount == 0):
+                await self.bot.say("That user doesn't seem to be registered in the league... Let them know to register!")
+            else:
+                res = await res.fetchone()
+                desc = "Trainer Name: {}\n".format(res['trainerName'])
+                desc += "Friend Code: {}\n".format(res['friendCode'])
+                desc += "Join Date: {}\n".format(res['joinDate'])
+                msg = discord.Embed(title=user.display_name, description=desc)
+                await self.bot.send_message(ctx.message.channel, embed=msg)
+            self.bot.SQL.disconnect()
 
+    @profile.command(pass_context=True)
+    async def edit(self, ctx):
+        """Usage :::"""
+        print("editing profile")
 
 def setup(bot):
     bot.add_cog(Account(bot))

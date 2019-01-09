@@ -1,5 +1,6 @@
 from discord.ext import commands
 import json
+import logging
 from os import listdir
 from os.path import isfile, join
 from random import *
@@ -11,6 +12,8 @@ cogs_dir = "cogs"
 config = json.loads(open("config.json").read())
 prefix = config["prefix"]
 admins = config["admins"]
+
+logging.basicConfig(format='%(asctime)s:%(message)s', filename="logging.log", level=logging.WARNING)
 
 bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
 
@@ -72,5 +75,5 @@ if __name__ == "__main__":
             bot.load_extension(cogs_dir + "." + extension)
             print("Loaded Extension: {}".format(extension))
         except Exception as e:
-            print('Failed to load extension {extension}. Issue: {}', extension, e)
+            logging.error('Failed to load extension \'{}\'. \n    Issue: {}'.format(extension, e))
     bot.run(config["token"], bot=True)
