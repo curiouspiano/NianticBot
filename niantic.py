@@ -13,7 +13,7 @@ config = json.loads(open("config.json").read())
 prefix = config["prefix"]
 admins = config["admins"]
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.WARNING)
+logging.basicConfig(format='%(asctime)s:%(message)s', filename="logging.log", level=logging.WARNING)
 
 bot = commands.Bot(self_bot=False, description="Niantic...", command_prefix=prefix)
 
