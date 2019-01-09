@@ -6,7 +6,7 @@ class Shrug():
         self.bot= bot
 
     async def on_message(self, message):
-        if(self.bot.user.mentioned_in(message) and message.author != self.bot.user):
+        if(self.bot.user.mentioned_in(message) and message.author != self.bot.user and not message.mention_everyone):
             await self.bot.send_message(message.channel, '¯\_(ツ)_/¯')
 
 
