@@ -4,9 +4,23 @@ import calendar
 import datetime
 
 class Leader():
+
     def __init__(self, bot):
         self.bot= bot
 
+    async def create_queue(self):
+        await self.bot.SQL.connect()
+        gymList = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" ORDER BY id ASC;")),"user_fk"))
+        eliteList =await (await self.bot.SQL.query("SELECT user_fk, users.friendCode FROM challengers INNER JOIN users ON users.id=challengers.user_fk WHERE active=1 AND name=\"Elite Four\" ORDER BY challengers.id ASC;")).fetchall()
+        self.bot.SQL.disconnect()
+        self.leaderQueue = {\
+                "gym" : {},\
+                "elite": {}}
+        for gym in gymList:
+            self.leaderQueue["gym"][gym] = []
+        for elite in eliteList:
+            self.leaderQueue["elite"][elite] = []
+    
     @commands.group(pass_context=True)
     async def leader(self,ctx):
         """Manage and List Frontier League Leaders"""
@@ -19,13 +33,12 @@ class Leader():
         #leader list [ltype]
         isError=False
         if ltype.replace(" ","")[:3].lower() == "gym" if ltype is not None else True:
-
             url1 = "https://pokemongo.gamepress.gg/sites/pokemongo/files/2018-02/Badge_GymLeader_GOLD_01.png"
             await self.bot.SQL.connect()
             userList = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" ORDER BY id ASC;")),"user_fk"))
             if len(userList) != 0:
                 badgeCursor = (await self.bot.SQL.query("\
-                        SELECT challengers.user_fk, badges.name, badges.description, users.friendCode\
+                        SELECT challengers.user_fk, badges.name, badges.description, users.friendCode, badges.thumbnail_path\
                         FROM challengers\
                         INNER JOIN badges ON badges.id=challengers.badge_fk\
                         INNER JOIN users ON challengers.user_fk=users.id\
@@ -37,6 +50,8 @@ class Leader():
                 for row in result:
                     user = ctx.message.server.get_member(str(row['user_fk']))
                     em = discord.Embed(name="Gym Leader", description="Gym Leader")
+                    if row['thumbnail_path'] != None:
+                        url1 = row['thumbnail_path']
                     em.set_thumbnail(url=url1)
                     em.add_field(name="Discord Username",value=user.mention,inline=True)
                     em.add_field(name="Friend Code",value=row['friendCode'],inline=True)
@@ -64,10 +79,10 @@ class Leader():
             isError=True
         if isError:
             await self.bot.send_message(ctx.message.channel,"I'm not sure I got that. Please try again")
-
+ 
     @leader.command(pass_context=True)
     @commands.has_any_role('Admin','Mod','admin')
-    async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
+    async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,badgeImageUrl : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
         """Adds a leader to the Frontier League. This command is for admins only"""
         challengeMonthNum = list(calendar.month_name).index(challengeMonth)
         await self.bot.SQL.connect()
@@ -78,9 +93,10 @@ class Leader():
                     REPLACE INTO badges\
                     SET description=\"{}\",\
                         name=\"{}\",\
+                        thumbnail_path=\"{}\",\
                         start_available=\"{}-{}-01\",\
                         end_available=\"{}-{}-{}\";".format(\
-                        desc,badgeName,\
+                        desc,badgeName,badgeImageUrl,\
                         challengeYear,challengeMonthNum,\
                         challengeYear,challengeMonthNum,calendar.monthrange(challengeYear,challengeMonthNum)[1]))
             badgeid = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("\
@@ -152,5 +168,79 @@ class Leader():
     async def remove_error(ctx, error,other):
         if isinstance(error, commands.CheckFailure):
             await ctx.bot.say("You do not have the permission to remove leaders. Please contact an Admin")
+
+    @leader.command(pass_context=True)
+    @commands.has_role('Frontier League Participant')
+    async def challenge(self,ctx,ltype : str,user : discord.Member, challenger : discord.Member = None):
+        """Challenge a leader
+        leader challenge <ltype> <@user> [@challenger]
+        """
+        if 'leaderQueue' not in vars(self):
+            await self.create_queue()
+        if challenger is None:
+            challenger = ctx.message.author
+        await self.bot.SQL.connect()
+        if ltype.replace(" ","")[:3].lower() == "gym":
+            gymLeader = (await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" and user_fk={} ORDER BY id ASC;".format(user.id))).fetchone()#[0]
+            await self.bot.say(gymLeader)
+            if gymLeader is None:
+                self.bot.send_message(ctx.message.channel,"{} is not a Gym Leader".format(user.mention))
+            else:
+                if user.id not in self.leaderQueue["gym"]:
+                    self.leaderQueue["gym"][user.id] = []
+                self.leaderQueue["gym"][user.id].append(challenger.id)
+        elif ltype.replace(" ","")[:9].lower() == "elitefour":
+            eliteFour =await (await self.bot.SQL.query("SELECT user_fk, users.friendCode FROM challengers INNER JOIN users ON users.id=challengers.user_fk WHERE active=1 AND name=\"Elite Four\" and challengers.user_fk={} ORDER BY challengers.id ASC;".format(user.id))).fetchall()
+            if eliteFour is None:
+                self.bot.send_message(ctx.message.channel,"{} is not in the Elite Four".format(user.mention))
+            else:
+                if user.id not in self.leaderQueue["elite"]:
+                    self.leaderQueue["elite"][user.id] = []
+                self.leaderQueue["elite"][user.id].append(challenger.id)
+
+    @challenge.error
+    async def chal_error(self,error,ctx):
+        if isinstance(error, commands.CommandInvokeError):
+            await self.bot.send_message(ctx.message.channel,"Something went wrong, please try again in a moment")
+            print(error)
+            await self.create_queue()
+            await ctx.command.invoke(ctx.command,ctx)
+        else:
+            await self.bot.send_message(ctx.message.channel,"Exception not caught")
+
+    @leader.command(pass_context=True)
+    @commands.has_role('Frontier League Participant')
+    async def listQueue(self,ctx,leader : discord.Member):
+        if 'leaderQueue' not in vars(self):
+            await self.create_queue()
+        value = ""
+        if leader.id in self.leaderQueue["gym"]:
+            value += "Gym:\n"
+            for userId in self.leaderQueue["gym"][leader.id]:
+                user = ctx.message.server.get_member(userId)
+                value += "{}\n".format(user.mention)
+        if leader.id in self.leaderQueue["elite"]:
+            value += "\nElite Four:\n"
+            for userId in self.leaderQueue["elite"][leader.id]:
+                user = ctx.message.server.get_member(userId)
+                value += "{}\n".format(user.mention)
+        if value != "":
+            em = discord.Embed(name="Leader Queue",description="Leader Queue for {}".format(leader.mention))
+            em.add_field(value=value)
+            await self.bot.send_message(ctx.message.channel,embed=em)
+        else:
+            await self.bot.send_message(ctx.message.channel,"{} has 0 challengers in their queue!".format(leader.mention))
+
+    @listQueue.error
+    async def lqueue_error(self,error,ctx):
+        if isinstance(error, commands.CommandInvokeError):
+            await self.bot.send_message(ctx.message.channel,"Something went wrong, please try again in a moment")
+            print("{}\n\n\n\n\n\n".format(error))
+            await self.create_queue()
+            await ctx.command.invoke(ctx)
+        else:
+            await self.bot.send_message(ctx.message.channel,"Exception not caught")
+
 def setup(bot):
+
     bot.add_cog(Leader(bot))
