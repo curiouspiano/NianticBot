@@ -33,13 +33,13 @@ class Leader():
         #leader list [ltype]
         isError=False
         if ltype.replace(" ","")[:3].lower() == "gym" if ltype is not None else True:
-
+            print("gym leader entered")
             url1 = "https://pokemongo.gamepress.gg/sites/pokemongo/files/2018-02/Badge_GymLeader_GOLD_01.png"
             await self.bot.SQL.connect()
             userList = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" ORDER BY id ASC;")),"user_fk"))
             if len(userList) != 0:
                 badgeCursor = (await self.bot.SQL.query("\
-                        SELECT challengers.user_fk, badges.name, badges.description, users.friendCode\
+                        SELECT challengers.user_fk, badges.name, badges.description, users.friendCode, badges.thumbnail_path\
                         FROM challengers\
                         INNER JOIN badges ON badges.id=challengers.badge_fk\
                         INNER JOIN users ON challengers.user_fk=users.id\
@@ -51,6 +51,8 @@ class Leader():
                 for row in result:
                     user = ctx.message.server.get_member(str(row['user_fk']))
                     em = discord.Embed(name="Gym Leader", description="Gym Leader")
+                    if row['thumbnail_path'] != None:
+                        url1 = row['thumbnail_path']
                     em.set_thumbnail(url=url1)
                     em.add_field(name="Discord Username",value=user.mention,inline=True)
                     em.add_field(name="Friend Code",value=row['friendCode'],inline=True)
@@ -173,11 +175,13 @@ class Leader():
         """Challenge a leader
         leader challenge <ltype> <@user> [@challenger]
         """
+        if 'leaderQueue' not in vars(self):
+            await self.create_queue()
         if challenger is None:
             challenger = ctx.message.author
         await self.bot.SQL.connect()
         if ltype.replace(" ","")[:3].lower() == "gym":
-            gymLeader = (await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" and user_fk={} ORDER BY id ASC;".format(user.id))).fetchone()[0]
+            gymLeader = (await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" and user_fk={} ORDER BY id ASC;".format(user.id))).fetchone()#[0]
             await self.bot.say(gymLeader)
             if gymLeader is None:
                 self.bot.send_message(ctx.message.channel,"{} is not a Gym Leader".format(user.mention))
@@ -197,7 +201,7 @@ class Leader():
     @challenge.error
     async def chal_error(self,error,ctx):
         if isinstance(error, commands.CommandInvokeError):
-            await self.bot.send_message(ctx.message.channel,"Exception caught correctly")
+            await self.bot.send_message(ctx.message.channel,"Something went wrong, please try again in a moment")
             print(error)
             await self.create_queue()
             await ctx.command.invoke(ctx.command,ctx)
@@ -207,6 +211,8 @@ class Leader():
     @leader.command(pass_context=True)
     @commands.has_role('Frontier League Participant')
     async def listQueue(self,ctx,leader : discord.Member):
+        if 'leaderQueue' not in vars(self):
+            await self.create_queue()
         value = ""
         if leader.id in self.leaderQueue["gym"]:
             value += "Gym:\n"
@@ -228,7 +234,7 @@ class Leader():
     @listQueue.error
     async def lqueue_error(self,error,ctx):
         if isinstance(error, commands.CommandInvokeError):
-            await self.bot.send_message(ctx.message.channel,"Exception caught correctly")
+            await self.bot.send_message(ctx.message.channel,"Something went wrong, please try again in a moment")
             print("{}\n\n\n\n\n\n".format(error))
             await self.create_queue()
             await ctx.command.invoke(ctx)
