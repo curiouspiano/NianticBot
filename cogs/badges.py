@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
+from lib.common import make_selection
 
 class Badges:
     def __init__(self, bot):
@@ -66,16 +67,24 @@ class Badges:
         else:
             user = mentions[0]
         await self.bot.SQL.connect()
-        sqlString = "SELECT * FROM challengers WHERE user_fk={} AND active=1".format(ctx.message.author.id)
+        sqlString = "SELECT bfr.badges.name,bfr.badges.description, bfr.badges.id FROM bfr.badges INNER JOIN bfr.challengers ON bfr.badges.id = bfr.challengers.badge_fk WHERE bfr.challengers.active=1 AND user_fk={}".format(ctx.message.author.id)
         res = await self.bot.SQL.query(sqlString)
         newBadge = -1
         if (res.rowcount == 1):
             #add badge if the user only has one badge available to grant
             res = await res.fetchone()
-            print(res['badge_fk'])
-            newBadge = await self.grant_badge(int(user.id), res['badge_fk'])
+            print(res)
+            newBadge = await self.grant_badge(int(user.id), res['id'])
         elif (res.rowcount > 1):
-            await self.bot.say("We need to figure out which badge you'd like to grant.")
+            prompt = await self.bot.say("We need to figure out which badge you'd like to grant.")
+            res = await res.fetchall()
+            options = []
+            for i in res:
+                options.append(i['name'])
+            userChoice = await make_selection(self.bot, ctx, options)
+            badge_key = res[options.index(userChoice)]['id']
+            await self.bot.delete_message(prompt)
+            newBadge = await self.grant_badge(int(user.id), badge_key)
             #determine which badge to add if they have more than one challenge active
         else:
             #user has no badges they can grant... get outta here 
