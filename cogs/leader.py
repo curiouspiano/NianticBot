@@ -33,7 +33,6 @@ class Leader():
         #leader list [ltype]
         isError=False
         if ltype.replace(" ","")[:3].lower() == "gym" if ltype is not None else True:
-            print("gym leader entered")
             url1 = "https://pokemongo.gamepress.gg/sites/pokemongo/files/2018-02/Badge_GymLeader_GOLD_01.png"
             await self.bot.SQL.connect()
             userList = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("SELECT user_fk FROM challengers WHERE active=1 and name=\"Gym Leader\" ORDER BY id ASC;")),"user_fk"))
@@ -80,10 +79,10 @@ class Leader():
             isError=True
         if isError:
             await self.bot.send_message(ctx.message.channel,"I'm not sure I got that. Please try again")
-
+ 
     @leader.command(pass_context=True)
     @commands.has_any_role('Admin','Mod','admin')
-    async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
+    async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,badgeImageUrl : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
         """Adds a leader to the Frontier League. This command is for admins only"""
         challengeMonthNum = list(calendar.month_name).index(challengeMonth)
         await self.bot.SQL.connect()
@@ -94,9 +93,10 @@ class Leader():
                     REPLACE INTO badges\
                     SET description=\"{}\",\
                         name=\"{}\",\
+                        thumbnail_path=\"{}\",\
                         start_available=\"{}-{}-01\",\
                         end_available=\"{}-{}-{}\";".format(\
-                        desc,badgeName,\
+                        desc,badgeName,badgeImageUrl,\
                         challengeYear,challengeMonthNum,\
                         challengeYear,challengeMonthNum,calendar.monthrange(challengeYear,challengeMonthNum)[1]))
             badgeid = (await self.bot.SQL.fetch_all_list((await self.bot.SQL.query("\
