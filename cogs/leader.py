@@ -64,7 +64,7 @@ class Leader():
             isError=True
         if ltype.replace(" ","")[:9].lower() == "elitefour" if ltype is not None else True:
 
-            url1 = "http://static.tumblr.com/8ead6fd4ef321fc779d824ec3d39f5cd/9vi46my/6uso1uc3y/tumblr_static_515l7v2awykgk0sgcwow4wgog.png"
+            url1 = "https://i.imgur.com/l48LJkw.png"
             await self.bot.SQL.connect()
             userList =await (await self.bot.SQL.query("SELECT user_fk, users.friendCode FROM challengers INNER JOIN users ON users.id=challengers.user_fk WHERE active=1 AND name=\"Elite Four\" ORDER BY challengers.id ASC;")).fetchall()
             self.bot.SQL.disconnect()
