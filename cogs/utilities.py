@@ -20,8 +20,11 @@ class Utilities():
         res = await res.fetchall()
         bfRole = discord.utils.get(ctx.message.server.roles, name="Frontier League Participant")
         for i in res:
-            member = discord.utils.get(ctx.message.server.members, id=str(i['id']))            
-            await self.bot.add_roles(member, bfRole)
+            try:
+                member = discord.utils.get(ctx.message.server.members, id=str(i['id']))            
+                await self.bot.add_roles(member, bfRole)
+            except Exception as e:
+                print(e)
         self.bot.SQL.disconnect()
 
 def setup(bot):
