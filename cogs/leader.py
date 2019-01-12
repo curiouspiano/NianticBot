@@ -64,7 +64,7 @@ class Leader():
             isError=True
         if ltype.replace(" ","")[:9].lower() == "elitefour" if ltype is not None else True:
 
-            url1 = "http://static.tumblr.com/8ead6fd4ef321fc779d824ec3d39f5cd/9vi46my/6uso1uc3y/tumblr_static_515l7v2awykgk0sgcwow4wgog.png"
+            url1 = "https://i.imgur.com/l48LJkw.png"
             await self.bot.SQL.connect()
             userList =await (await self.bot.SQL.query("SELECT user_fk, users.friendCode FROM challengers INNER JOIN users ON users.id=challengers.user_fk WHERE active=1 AND name=\"Elite Four\" ORDER BY challengers.id ASC;")).fetchall()
             self.bot.SQL.disconnect()
@@ -84,6 +84,9 @@ class Leader():
     @commands.has_any_role('Admin','Mod','admin')
     async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,badgeImageUrl : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
         """Adds a leader to the Frontier League. This command is for admins only"""
+        if ctx.message.server.id != 488144913230462989:
+            await self.bot.send_message(ctx.message.channel, "ya can't trick me!")
+            return
         challengeMonthNum = list(calendar.month_name).index(challengeMonth)
         await self.bot.SQL.connect()
         if ltype.replace(" ","")[:3].lower() == "gym":
