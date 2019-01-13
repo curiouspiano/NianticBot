@@ -56,7 +56,7 @@ class Leader():
                     em.add_field(name="Discord Username",value=user.mention,inline=True)
                     em.add_field(name="Friend Code",value=row['friendCode'],inline=True)
                     em.add_field(name="Badge Title",value=row['name'],inline=True)
-                    em.add_field(name="Challenge Description",value=str(row['description']).replace("b","").replace("'",""),inline=True)
+                    em.add_field(name="Challenge Description",value=str(row['description']),inline=True)
                     await self.bot.send_message(ctx.message.channel,embed=em)
             else:
                 self.bot.SQL.disconnect()
