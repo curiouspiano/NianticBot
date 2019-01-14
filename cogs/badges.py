@@ -127,5 +127,24 @@ class Badges:
         self.bot.SQL.disconnect()
         await self.bot.send_message(ctx.message.channel, embed=em)
 
+    @badge.command(pass_context=True)
+    async def owned(self, ctx, *, args = ""):
+        await self.bot.SQL.connect()
+        sqlCursor = await self.bot.SQL.query("select badges.name, badges.id from badges\
+                inner join user_to_badge on badges.id=user_to_badge.badge_fk\
+                inner join users on user_to_badge.user_fk=users.id\
+                where user_to_badge.user_fk = {};".format(ctx.message.author.id))
+        badgesEarned = await sqlCursor.fetchall()
+        if "detailed" not in args:
+            outString = "You have earned the following badges:\n"
+            for badge in badgesEarned:
+                outString += "{}\n".format(str(badge["name"]))
+            await self.bot.send_message(ctx.message.channel, outString)
+        else:
+            for badge in badgesEarned:
+                em = await self.badge_embed(ctx.message.author.id,badge["id"])
+                await self.bot.send_message(ctx.message.channel,embed=em)
+
+        self.bot.SQL.disconnect()
 def setup(bot):
     bot.add_cog(Badges(bot))
