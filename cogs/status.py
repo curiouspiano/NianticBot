@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class Example():
+class Status():
     def __init__(self, bot):
         self.bot= bot
 
@@ -35,4 +35,4 @@ class Example():
 
 
 def setup(bot):
-    bot.add_cog(Example(bot))
+    bot.add_cog(Status(bot))
