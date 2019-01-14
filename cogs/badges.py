@@ -30,7 +30,7 @@ class Badges:
             dateInfo = await res.fetchone()
             granterName = "Unavailable"
             if dateInfo['granter'] != None:
-                granterName = await self.bot.get_user_info(dateInfo['granter']).name
+                granterName = (await self.bot.get_user_info(dateInfo['granter'])).mention
             embed.add_field(name="__Earned__", inline=False,value="Awarded to {} at {}. Awarded by {}".format(user.mention, dateInfo['earned'], granterName))
 
         else:
@@ -38,13 +38,13 @@ class Badges:
         embed.set_thumbnail(url=image)
         return embed
 
-    async def grant_badge(self, user_id, badge_id):
+    async def grant_badge(self, user_id, badge_id, granter_id):
         sqlString = "SELECT * FROM user_to_badge WHERE user_fk={} AND badge_fk={}".format(int(user_id), str(badge_id))
         res = await self.bot.SQL.query(sqlString)
         if(res.rowcount > 0):
             return -1
         else:
-            sqlString = "INSERT INTO user_to_badge(user_fk, badge_fk, earned) VALUES({}, '{}', '{}')".format(int(user_id), badge_id, datetime.now())
+            sqlString = "INSERT INTO user_to_badge(user_fk, badge_fk, earned, granter) VALUES({}, '{}', '{}', {})".format(int(user_id), badge_id, datetime.now(),int(granter_id))
             print(sqlString)
             await self.bot.SQL.query(sqlString)
             return int(badge_id)
@@ -74,7 +74,7 @@ class Badges:
             #add badge if the user only has one badge available to grant
             res = await res.fetchone()
             print(res)
-            newBadge = await self.grant_badge(int(user.id), res['id'])
+            newBadge = await self.grant_badge(int(user.id), res['id'],int(ctx.message.author.id))
         elif (res.rowcount > 1):
             prompt = await self.bot.say("We need to figure out which badge you'd like to grant.")
             res = await res.fetchall()
@@ -84,7 +84,7 @@ class Badges:
             userChoice = await make_selection(self.bot, ctx, options)
             badge_key = res[options.index(userChoice)]['id']
             await self.bot.delete_message(prompt)
-            newBadge = await self.grant_badge(int(user.id), badge_key)
+            newBadge = await self.grant_badge(int(user.id), badge_key,int(ctx.message.author.id))
             #determine which badge to add if they have more than one challenge active
         else:
             #user has no badges they can grant... get outta here 
