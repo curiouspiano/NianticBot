@@ -85,6 +85,7 @@ class Leader(commands.Cog):
     @commands.has_any_role('Admin','Mod','admin')
     async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,badgeImageUrl : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
         """Adds a leader to the Frontier League. This command is for admins only"""
+
         if ctx.message.guild.id != 488144913230462989:
             await ctx.send("ya can't trick me!")
             return
