@@ -37,20 +37,26 @@ async def make_selection(bot, ctx, options):
     for i in range(len(options)):
         msg += "{} - {}\n".format(INDEX_TO_EMOJI[i], options[i])
 
-    priMessage = await bot.send_message(ctx.message.channel, msg)
+    priMessage = await ctx.send(msg)
 
     reactionOptions = []
 
     for i in range(len(options)):
         reactionOptions.append(INDEX_TO_EMOJI[i])
-        await bot.add_reaction(priMessage, INDEX_TO_EMOJI[i])
+        await priMessage.add_reaction(INDEX_TO_EMOJI[i])
 
-    choice = await bot.wait_for_reaction(emoji=reactionOptions, user=ctx.message.author, message=priMessage, timeout=180)
+    def check(reaction, user):
+        return user == ctx.message.author and str(reaction.emoji) in INDEX_TO_EMOJI
+
+    reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+
+    print("Finished Waiting")
+    choice = reaction.emoji
     
-    answer = choice.reaction.emoji
+    answer = choice
 
     final = options[reactionOptions.index(answer)]
 
-    await bot.delete_message(priMessage)
+    await priMessage.delete()
 
     return final
