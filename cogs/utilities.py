@@ -8,6 +8,10 @@ class Utilities(commands.Cog):
     @commands.command(pass_context=True)
     async def link(self, ctx):
         await ctx.send(content="https://discordapp.com/api/oauth2/authorize?client_id={}&permissions=0&scope=bot".format(self.bot.user.id))
+
+    @commands.command(pass_context=True)
+    async def source(self, ctx):
+        await ctx.send(content="https://github.com/curiouspiano/NianticBot")
 """
     @commands.command(pass_context=True)
     async def upDateParticipants(self, ctx):
