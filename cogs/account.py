@@ -2,6 +2,7 @@ import discord
 import logging
 from discord.ext import commands
 from datetime import date
+from lib.common import *
 
 class Account(commands.Cog):
     def __init__(self, bot):
@@ -97,7 +98,33 @@ class Account(commands.Cog):
     @profile.command(pass_context=True)
     async def edit(self, ctx):
         """Usage :::"""
-        print("editing profile")
+
+        user = ctx.message.author
+
+        options = ["Name", "Friend Code"]
+
+        choice = await make_selection(self.bot, ctx, options)
+        
+        await ctx.send("Alright, editing [{0}]. What is your new [{0}]?".format(choice))
+
+        def check(message):
+            return message.author == user
+
+        resp = await self.bot.wait_for('message', check=check, timeout=180)
+
+        await self.bot.SQL.connect()
+        sql = None
+
+        if choice == "Name":
+            sql = "UPDATE users SET trainerName='{0}' WHERE id='{1}'".format(resp.content, int(user.id))
+
+        elif choice == "Friend Code":
+            sql = "UPDATE users SET friendCode='{0}' WHERE id='{1}'".format(resp.content, int(user.id))
+
+        res = await self.bot.SQL.query(sql)
+        self.bot.SQL.disconnect()
+
+        await ctx.send("Your {0} has been updated to {1}".format(choice, str(resp.content)))
 
 def setup(bot):
     bot.add_cog(Account(bot))

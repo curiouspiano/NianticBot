@@ -53,7 +53,8 @@ class Leader(commands.Cog):
                     if row['thumbnail_path'] != None:
                         url1 = row['thumbnail_path']
                     em.set_thumbnail(url=url1)
-                    em.add_field(name="Discord Username",value=user.mention,inline=True)
+                    if user != None:
+                        em.add_field(name="Discord Username",value=user.mention,inline=True)
                     em.add_field(name="Friend Code",value=row['friendCode'],inline=True)
                     em.add_field(name="Badge Title",value=row['name'],inline=True)
                     em.add_field(name="Challenge Description",value=str(row['description']),inline=True)
