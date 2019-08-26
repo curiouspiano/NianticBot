@@ -16,7 +16,7 @@ class ShinyRef(commands.Cog):
     @commands.group(pass_context=True)
     async def shiny(self, ctx):
         if ctx.invoked_subcommand is None:
-            print("hey man")
+            print("hey man. I need ")
 
     @shiny.command(pass_context=True)
     async def lookup(self, ctx, pokeName):
@@ -24,7 +24,7 @@ class ShinyRef(commands.Cog):
         sqlString = "SELECT * FROM shiny_ref WHERE name='{}'".format(pokeName)
         resp = await self.bot.SQL.query(sqlString)
         if(resp.rowcount == 0):
-            await self.bot.send_message(ctx.message.channel, "I can't seem to find that pokemon in our database... DM a dev if you think this is an error")
+            await ctx.send("I can't seem to find that pokemon in our database... DM a dev if you think this is an error")
         else:
             resp = await resp.fetchone()
             if resp['shiny'] == 1:
@@ -33,9 +33,9 @@ class ShinyRef(commands.Cog):
                 poke_id = resp['poke_id']
 
                 em = await self.embed_shiny(name, image, poke_id)
-                await self.bot.send_message(ctx.message.channel, embed=em)
+                await ctx.send(embed=em)
             else:
-                await self.bot.send_message(ctx.message.channel, "This pokemon does not have a shiny variant in pokemonGO yet...")
+                await ctx.send("This pokemon does not have a shiny variant in pokemonGO yet...")
                                 
         self.bot.SQL.disconnect()
 

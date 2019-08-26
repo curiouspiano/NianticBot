@@ -12,7 +12,7 @@ class Badges(commands.Cog):
 
         #obtain badge data and make the embed, this is for display without user data
         defaultImage = "https://i.imgur.com/g9VaBDJ.jpg"
-        user = await self.bot.get_user_info(user_id)
+        user = self.bot.get_user(user_id)
         res = await self.bot.SQL.query("SELECT * FROM badges WHERE id={}".format(int(badge_id)))
         badgeInfo = await res.fetchone()
         desc = str(badgeInfo['description'])
@@ -30,7 +30,7 @@ class Badges(commands.Cog):
             dateInfo = await res.fetchone()
             granterName = "Unavailable"
             if dateInfo['granter'] != None:
-                granterName = (await self.bot.get_user_info(dateInfo['granter'])).mention
+                granterName = (self.bot.get_user(dateInfo['granter'])).mention
             embed.add_field(name="__Earned__", inline=False,value="Awarded to {} at {}. Awarded by {}".format(user.mention, dateInfo['earned'], granterName))
 
         else:
