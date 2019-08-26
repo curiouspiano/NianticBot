@@ -45,8 +45,8 @@ async def make_selection(bot, ctx, options):
         reactionOptions.append(INDEX_TO_EMOJI[i])
         await priMessage.add_reaction(INDEX_TO_EMOJI[i])
 
-        def check(reaction, user):
-
+    def check(reaction, user):
+        return user == ctx.message.author and str(reaction.emoji) in INDEX_TO_EMOJI
 
     reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
 

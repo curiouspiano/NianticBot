@@ -48,7 +48,7 @@ class Badges(commands.Cog):
             print(sqlString)
             await self.bot.SQL.query(sqlString)
             return int(badge_id)
-
+            
     @commands.group(pass_context=True)
     async def badge(self, ctx):
         """Lookup Badges, list earned, grant badges"""

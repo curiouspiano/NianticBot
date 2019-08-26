@@ -30,8 +30,9 @@ class Status(commands.Cog):
         em.add_field(name="__Challenge Type__", value=challengeNames)
         em.add_field(name="__Badge Name__", value=badgeNames)
         em.add_field(name="__Earned__", value=earned)
-        await self.bot.send_message(ctx.message.channel,embed=em)
         self.bot.SQL.disconnect()
+        await ctx.send(embed=em)
+        
 
 
 def setup(bot):
