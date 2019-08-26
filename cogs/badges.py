@@ -53,7 +53,7 @@ class Badges(commands.Cog):
     async def badge(self, ctx):
         """Lookup Badges, list earned, grant badges"""
         if ctx.invoked_subcommand is None:
-            await self.bot.send_message(ctx.message.channel,"You need a subcommand for this to work! Please try again")
+            await ctx.send("You need a subcommand for this to work! Please try again")
 
     @badge.command(pass_context=True)
     async def grant(self, ctx):
@@ -62,7 +62,7 @@ class Badges(commands.Cog):
         mentions = ctx.message.mentions
         user = None
         if(len(mentions) == 0):
-            await self.bot.say("Please mention a user...")
+            await ctx.send("Please mention a user...")
             return
         else:
             user = mentions[0]
@@ -76,28 +76,28 @@ class Badges(commands.Cog):
             print(res)
             newBadge = await self.grant_badge(int(user.id), res['id'],int(ctx.message.author.id))
         elif (res.rowcount > 1):
-            prompt = await self.bot.say("We need to figure out which badge you'd like to grant.")
+            prompt = await ctx.send("We need to figure out which badge you'd like to grant.")
             res = await res.fetchall()
             options = []
             for i in res:
                 options.append(i['name'])
             userChoice = await make_selection(self.bot, ctx, options)
             badge_key = res[options.index(userChoice)]['id']
-            await self.bot.delete_message(prompt)
+            await prompt.delete()
             newBadge = await self.grant_badge(int(user.id), badge_key,int(ctx.message.author.id))
             #determine which badge to add if they have more than one challenge active
         else:
             #user has no badges they can grant... get outta here 
             self.bot.SQL.disconnect()
-            await self.bot.say("You do not have any badges to grant...")
+            await ctx.send("You do not have any badges to grant...")
             return
         
         if(newBadge > 0):
-            await self.bot.say("Congratulations on earning the new badge")
+            await ctx.send("Congratulations on earning the new badge")
             em = await self.badge_embed(int(user.id), newBadge)
-            await self.bot.send_message(ctx.message.channel, embed=em)
+            await ctx.send(embed=em)
         else:
-            await self.bot.say("It would appear they already have that badge...")
+            await ctx.send("It would appear they already have that badge...")
         self.bot.SQL.disconnect()
 
     @badge.command(pass_context=True)
@@ -108,14 +108,14 @@ class Badges(commands.Cog):
         await self.bot.SQL.connect()
         resp = await self.bot.SQL.query(sqlString)
         if (resp.rowcount == 0):
-            await self.bot.say("Hmm... can't seem to find that badge, make sure you surround the name with quotes")
+            await ctx.send("Hmm... can't seem to find that badge, make sure you surround the name with quotes")
             return
         badgeData = await resp.fetchone()
         badgeID = badgeData['id']
 
         em = await self.badge_embed(int(ctx.message.author.id), badgeID)
         self.bot.SQL.disconnect()
-        await self.bot.send_message(ctx.message.channel, embed=em)
+        await ctx.send(embed=em)
 
     @badge.command(pass_context=True)
     async def test(self, ctx):
@@ -125,7 +125,7 @@ class Badges(commands.Cog):
         em = await self.badge_embed(userId, badgeId)
         #used to test badge related commands
         self.bot.SQL.disconnect()
-        await self.bot.send_message(ctx.message.channel, embed=em)
+        await ctx.send(embed=em)
 
     @badge.command(pass_context=True)
     async def owned(self, ctx, *, args = ""):
@@ -139,11 +139,11 @@ class Badges(commands.Cog):
             outString = "You have earned the following badges:\n"
             for badge in badgesEarned:
                 outString += "{}\n".format(str(badge["name"]))
-            await self.bot.send_message(ctx.message.channel, outString)
+            await ctx.send(outString)
         else:
             for badge in badgesEarned:
                 em = await self.badge_embed(ctx.message.author.id,badge["id"])
-                await self.bot.send_message(ctx.message.channel,embed=em)
+                await ctx.send(embed=em)
 
         self.bot.SQL.disconnect()
 def setup(bot):
