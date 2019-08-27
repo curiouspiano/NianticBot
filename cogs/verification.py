@@ -19,7 +19,6 @@ class Verification(commands.Cog):
                 try:
                     res = getTeam("temp.png")
 
-                    await message.delete()
                     POSSIBLE = [488146122091528194, 488146121886138369, 488146121613508608, 519304919631527956]
 
                     for j in message.author.roles:
@@ -40,9 +39,12 @@ class Verification(commands.Cog):
                     rol = message.guild.get_role(newRole)
                     await message.author.add_roles(rol)
                     await message.channel.send("Welcome {} to team {}!".format(message.author.mention, res))
+                    await message.delete()
                 except Exception as e:
                     print(e)
+                    mod = message.guild.get_role(488160235085889537)
                     await message.channel.send("Sorry... I had some issues")
+                    await message.channel.send("Could a {} please help me out?".format(mod.mention))
 
 def setup(bot):
     bot.add_cog(Verification(bot))
