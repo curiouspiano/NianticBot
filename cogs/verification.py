@@ -46,5 +46,7 @@ class Verification(commands.Cog):
                     await message.channel.send("Sorry... I had some issues")
                     await message.channel.send("Could a {} please help me out?".format(mod.mention))
 
+        elif(self.bot.user.mentioned_in(message) and message.author != self.bot.user and not message.mention_everyone):
+            await message.channel.send('¯\_(ツ)_/¯')
 def setup(bot):
     bot.add_cog(Verification(bot))
