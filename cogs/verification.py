@@ -8,11 +8,11 @@ import urllib
 class Verification(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.channel = bot.get_channel(488153124633182219)
+        self.channel = 488153124633182219
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if(message.author.id != self.bot.user.id and message.channel == self.channel):
+        if(message.author.id != self.bot.user.id and message.channel.id  == self.channel):
             if(len(message.attachments) > 0):
                 for i in message.attachments:
                     await i.save("temp.png")
