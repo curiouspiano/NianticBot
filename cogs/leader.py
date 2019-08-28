@@ -119,7 +119,7 @@ class Leader(commands.Cog):
                         user.id,badgeid,challengeMonth,challengeYear))
 
             gymRole = discord.utils.get(ctx.message.guild.roles,name="Gym Leader")
-            await self.bot.add_roles(user,gymRole)
+            await user.add_roles(gymRole)
             await ctx.send("Gym Leader added:\nLeader: {}\nDescription: {}\nBadge Name: {}".format(user.mention,desc,badgeName))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
             ##Adds an Elite Four Member
@@ -132,7 +132,7 @@ class Leader(commands.Cog):
                         user.id,challengeMonth,challengeYear))
 
             eliteRole = discord.utils.get(ctx.message.guild.roles,name="Elite Four")
-            await self.bot.add_roles(user,eliteRole)
+            await user.add_roles(eliteRole)
             await ctx.send("Elite Four Added:\n{}".format(user.mention))
         else:
             await ctx.send("I'm not sure I got that. Please try again")
