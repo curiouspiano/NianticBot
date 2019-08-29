@@ -104,7 +104,7 @@ class Badges(commands.Cog):
     async def lookup(self, ctx, badge_name):
         """Used to lookup a badge
             usage: badge lookup 'badge name'"""
-        sqlString = "SELECT * FROM badges WHERE name='{}'".format(badge_name)
+        sqlString = "SELECT * FROM badges WHERE name LIKE '%{}%'".format(badge_name)
         await self.bot.SQL.connect()
         resp = await self.bot.SQL.query(sqlString)
         if (resp.rowcount == 0):
