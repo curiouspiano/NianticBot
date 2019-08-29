@@ -85,10 +85,10 @@ class Leader(commands.Cog):
     @commands.has_any_role('Admin','Mod','admin')
     async def add(self,ctx,ltype : str,user : discord.Member,desc : str = None,badgeName : str = None,badgeImageUrl : str = None,challengeMonth : str = calendar.month_name[(datetime.datetime.today().month+1 if datetime.datetime.today().month < 12 else 1)],challengeYear : int = datetime.datetime.today().year):
         """Adds a leader to the Frontier League. This command is for admins only"""
-
-        if ctx.message.guild.id != 488144913230462989:
-            await ctx.send("ya can't trick me!")
-            return
+        print("Adding a leader")
+        #if ctx.message.guild.id != 488144913230462989:
+        #    await ctx.send("ya can't trick me!")
+        #    return
         challengeMonthNum = list(calendar.month_name).index(challengeMonth)
         await self.bot.SQL.connect()
         if ltype.replace(" ","")[:3].lower() == "gym":
@@ -118,8 +118,12 @@ class Leader(commands.Cog):
                         description=\"{}, {}\";".format(\
                         user.id,badgeid,challengeMonth,challengeYear))
 
+            print("Leader added to database")
             gymRole = discord.utils.get(ctx.message.guild.roles,name="Gym Leader")
+            print(type(gymRole))
+            await ctx.send("Testing")
             await user.add_roles(gymRole)
+            print("Gave user Gym Leader role")
             await ctx.send("Gym Leader added:\nLeader: {}\nDescription: {}\nBadge Name: {}".format(user.mention,desc,badgeName))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
             ##Adds an Elite Four Member
@@ -139,10 +143,16 @@ class Leader(commands.Cog):
 
         self.bot.SQL.disconnect()
 
-    @add.error
-    async def add_error(ctx, error,other):
+    @add.error  
+    async def add_error(cog,ctx,error):
         if isinstance(error, commands.CheckFailure):
-            await ctx.bot.say("You do not have the permission to add leaders. Please contact an Admin")
+            await ctx.send("You do not have the permission to add leaders. Please contact an Admin")
+        elif isinstance(error.original, discord.Forbidden):
+            await ctx.send("The bot doesn't have permission to do that. Please contact an Admin")
+        else:
+            await ctx.send("Something went wrong. Please contact an admin")
+            print(error.original)
+
 
     @leader.command(pass_context=True)
     @commands.has_any_role('Admin','Mod','admin','Gym Leader')
