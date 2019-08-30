@@ -12,12 +12,12 @@ import urllib
 class Verification(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.channel = bot.get_channel(488153124633182219)
+        self.channel = 488153124633182219
 
     @commands.Cog.listener()
     async def on_message(self, message):
         print("{}-{} sent message to channel {} : {}".format(message.author.name, message.author.id, message.channel.id, message.content))
-        if(message.author.id != self.bot.user.id and m):
+        if(message.author.id != self.bot.user.id and message.channel.id == self.channel):
             print("Valid attempt, {} attachments".format(len(message.attachments)))
             if(len(message.attachments) > 0):
                 for i in message.attachments:
@@ -53,7 +53,7 @@ class Verification(commands.Cog):
 
                         rol = message.guild.get_role(newRole)
                         await message.author.add_roles(rol)
-                    await message.channel.send("Welcome {} to team {}!".format(message.author.mention, res))
+                        await message.channel.send("Welcome {} to team {}!".format(message.author.mention, res))
 
                     #Attempt to determine users level & pokemonGo name
                     try:
@@ -68,7 +68,8 @@ class Verification(commands.Cog):
                             await message.channel.send("Welcome to the ELITE level 40 club!")
                         await message.delete()
                     except Exception as e:
-                        await message.channel.send("... but I could not determine your level...\n {}, a little help for once?".format(mod.mention))
+                        print(e)
+                        await message.channel.send("... but I could not determine your level...\n {}, a little help for once?".format("TEMP"))
                 except Exception as e:
                     await message.channel.send("Sorry... I had some issues")
                     await message.channel.send("Could a {} please help me out?".format(mod.mention))

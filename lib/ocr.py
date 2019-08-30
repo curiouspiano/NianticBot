@@ -16,7 +16,7 @@ def _parseLevel(gray, template):
     levelarea = gray[y-int(0.09*width):y+int(0.01*width),x-int(0.03*width):x+int(0.13*width)]
     level = pytesseract.image_to_string(levelarea)
     print("Found text -> {" + level + "}\n")
-    reqLevel = [int(s) for s in level.split() if s.strip('.').isdigit()]
+    reqLevel = [int(s.strip('.')) for s in level.split() if (s.strip('.')).isdigit()]
 
     return reqLevel
 
@@ -47,8 +47,8 @@ def getLevel(imagepath):
     result = [0,False]
     # load the example image and  convert it to grayscale
     image = cv2.imread(imagepath)
-    template_ios =  cv2.imread("template_ios.PNG")
-    template_android = cv2.imread("template_android.PNG")
+    template_ios =  cv2.imread("lib/template_ios.PNG")
+    template_android = cv2.imread("lib/template_android.PNG")
     if image is None:
         print("Error while reading file")
         return None
@@ -77,8 +77,8 @@ def getName(imagepath):
 
     image = cv2.imread(imagepath)
 
-    template_android =  cv2.imread("&_template_android.png")
-    template_ios = cv2.imread("&_template_ios.png")
+    template_android =  cv2.imread("lib/&_template_android.png")
+    template_ios = cv2.imread("lib/&_template_ios.png")
     
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
