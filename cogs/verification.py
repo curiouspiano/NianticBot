@@ -69,7 +69,7 @@ class Verification(commands.Cog):
                         await message.delete()
                     except Exception as e:
                         print(e)
-                        await message.channel.send("... but I could not determine your level...\n {}, a little help for once?".format("TEMP"))
+                        await message.channel.send("... but I could not determine your level...\n {}, a little help for once?".format(mod.mention))
                 except Exception as e:
                     await message.channel.send("Sorry... I had some issues")
                     await message.channel.send("Could a {} please help me out?".format(mod.mention))
