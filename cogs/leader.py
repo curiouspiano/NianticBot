@@ -118,12 +118,9 @@ class Leader(commands.Cog):
                         description=\"{}, {}\";".format(\
                         user.id,badgeid,challengeMonth,challengeYear))
 
-            print("Leader added to database")
             gymRole = discord.utils.get(ctx.message.guild.roles,name="Gym Leader")
-            print(type(gymRole))
             await ctx.send("Testing")
             await user.add_roles(gymRole)
-            print("Gave user Gym Leader role")
             await ctx.send("Gym Leader added:\nLeader: {}\nDescription: {}\nBadge Name: {}".format(user.mention,desc,badgeName))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
             ##Adds an Elite Four Member
@@ -164,7 +161,7 @@ class Leader(commands.Cog):
             self.bot.SQL.disconnect()
 
             gymRole = discord.utils.get(ctx.message.guild.roles,name="Gym Leader")
-            await self.bot.remove_roles(user,gymRole)
+            await user.remove_roles(gymRole)
 
             await ctx.send("Gym Leader removed: {}".format(user.mention))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
@@ -173,16 +170,22 @@ class Leader(commands.Cog):
             self.bot.SQL.disconnect()
 
             eliteRole = discord.utils.get(ctx.message.guild.roles,name="Elite Four")
-            await self.bot.remove_roles(user,eliteRole)
+            await user.remove_roles(eliteRole)
 
             await ctx.send("Elite Four Member removed: {}".format(user.mention))
         else:
             await ctx.send("I'm not sure I got that. Please try again")
 
     @remove.error
-    async def remove_error(ctx, error,other):
+    async def remove_error(self,ctx,error):
         if isinstance(error, commands.CheckFailure):
             await ctx.send("You do not have the permission to remove leaders. Please contact an Admin")
+        elif isinstance(error.original, discord.Forbidden):
+            await ctx.send("The bot doesn't have permission to do that. Please contact an Admin")
+        else:
+            await ctx.send("Something went wrong. Please contact an admin")
+            print(error.original)
+
 
     @leader.command(pass_context=True)
     @commands.has_role('Frontier League Participant')

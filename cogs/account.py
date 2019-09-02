@@ -54,7 +54,7 @@ class Account(commands.Cog):
             try:
                 bfRole = None
                 bfRole = discord.utils.get(ctx.message.guild.roles, name="Frontier League Participant")
-                await self.bot.add_roles(ctx.message.author, bfRole)
+                await ctx.message.author.add_roles(bfRole)
             except Exception as e:
                 logging.warning(e)
                 await ctx.send("....however, I can not assign you the role, sorry.")
