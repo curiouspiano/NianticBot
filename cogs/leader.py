@@ -118,12 +118,9 @@ class Leader(commands.Cog):
                         description=\"{}, {}\";".format(\
                         user.id,badgeid,challengeMonth,challengeYear))
 
-            print("Leader added to database")
             gymRole = discord.utils.get(ctx.message.guild.roles,name="Gym Leader")
-            print(type(gymRole))
             await ctx.send("Testing")
             await user.add_roles(gymRole)
-            print("Gave user Gym Leader role")
             await ctx.send("Gym Leader added:\nLeader: {}\nDescription: {}\nBadge Name: {}".format(user.mention,desc,badgeName))
         elif ltype.replace(" ","")[:9].lower() == "elitefour":
             ##Adds an Elite Four Member
