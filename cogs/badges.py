@@ -110,12 +110,11 @@ class Badges(commands.Cog):
         if (resp.rowcount == 0):
             await ctx.send("Hmm... can't seem to find that badge, make sure you surround the name with quotes")
             return
-        badgeData = await resp.fetchone()
-        badgeID = badgeData['id']
-
-        em = await self.badge_embed(int(ctx.message.author.id), badgeID)
+        badgeData = await self.bot.SQL.fetch_all_list(resp,"id")
+        for badgeID in badgeData:
+            em = await self.badge_embed(int(ctx.message.author.id), badgeID)
+            await ctx.send(embed=em)
         self.bot.SQL.disconnect()
-        await ctx.send(embed=em)
 
     @badge.command(pass_context=True)
     async def test(self, ctx):
