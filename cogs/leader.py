@@ -48,7 +48,7 @@ class Leader(commands.Cog):
 
                 self.bot.SQL.disconnect()
                 for row in result:
-                    user = ctx.message.guild.get_member(str(row['user_fk']))
+                    user = ctx.message.guild.get_member(row['user_fk'])
                     em = discord.Embed(name="Gym Leader", description="Gym Leader")
                     if row['thumbnail_path'] != None:
                         url1 = row['thumbnail_path']
