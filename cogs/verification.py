@@ -27,6 +27,7 @@ class Verification(commands.Cog):
 
                 #Get mod @mention
                 mod = message.guild.get_role(488160235085889537)
+                admin = message.guild.get_role(488147164757753859)
                 try:
                     res = getTeam("temp.png")
                     #possible team roles.
@@ -69,7 +70,7 @@ class Verification(commands.Cog):
                         await message.delete()
                     except Exception as e:
                         print(e)
-                        await message.channel.send("... but I could not determine your level...\n {}, could you please double check?".format(mod.mention))
+                        await message.channel.send("... but I could not determine your level...\n {} or {}, could you please double check?".format(mod.mention, admin.mention))
                 except Exception as e:
                     await message.channel.send("Sorry... I had some issues")
                     await message.channel.send("Could a {} please help me out?".format(mod.mention))
