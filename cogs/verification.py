@@ -14,7 +14,7 @@ class Verification(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.channel = 488153124633182219
-        self.DISALLOWED_CHANNELS = [519302286389018674, 488170130161926174]
+        self.DISALLOWED_CHANNELS = [519302286389018674, 488170130161926174, 488153124633182219]
 
     @commands.Cog.listener()
     async def on_message(self, message):
